@@ -74,6 +74,58 @@ interface GraphState {
 }
 
 const MAX_HISTORY = 100;
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 72;
+const NODE_GAP_X = 48;
+const NODE_GAP_Y = 36;
+const DEFAULT_START_POS = { x: 80, y: 80 };
+
+function rectsOverlap(
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+) {
+  return !(
+    a.x + a.w <= b.x ||
+    b.x + b.w <= a.x ||
+    a.y + a.h <= b.y ||
+    b.y + b.h <= a.y
+  );
+}
+
+function findNonOverlappingPosition(
+  existing: KPI[],
+  start = DEFAULT_START_POS,
+): { x: number; y: number } {
+  const occupied = existing
+    .filter((k) => k.position)
+    .map((k) => ({
+      x: k.position!.x,
+      y: k.position!.y,
+      w: NODE_WIDTH,
+      h: NODE_HEIGHT,
+    }));
+  if (occupied.length === 0) return { ...start };
+
+  // Scan row-by-row for the first slot with no overlap.
+  const stepX = NODE_WIDTH + NODE_GAP_X;
+  const stepY = NODE_HEIGHT + NODE_GAP_Y;
+  for (let row = 0; row < 200; row++) {
+    for (let col = 0; col < 40; col++) {
+      const candidate = {
+        x: start.x + col * stepX,
+        y: start.y + row * stepY,
+        w: NODE_WIDTH,
+        h: NODE_HEIGHT,
+      };
+      const overlap = occupied.some((r) => rectsOverlap(candidate, r));
+      if (!overlap) return { x: candidate.x, y: candidate.y };
+    }
+  }
+
+  // Fallback, should almost never happen.
+  const maxY = Math.max(...occupied.map((r) => r.y));
+  return { x: start.x, y: maxY + stepY };
+}
 
 export const useGraphStore = create<GraphState>((set, get) => {
   /** push a history entry and clear the redo stack */
@@ -105,11 +157,13 @@ export const useGraphStore = create<GraphState>((set, get) => {
 
     addKpi({ name, note, color }) {
       const now = Date.now();
+      const position = findNonOverlappingPosition(get().kpis);
       const kpi: KPI = {
         id: newId('kpi'),
         name: name.trim(),
         note,
         color,
+        position,
         createdAt: now,
         updatedAt: now,
       };

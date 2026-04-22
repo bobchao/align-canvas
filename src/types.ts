@@ -37,14 +37,15 @@ export const DEFAULT_PREFERENCES: Preferences = {
 };
 
 export const KPI_COLOR_PALETTE = [
-  '#6366f1',
-  '#0ea5e9',
-  '#14b8a6',
   '#22c55e',
+  '#16a34a',
+  '#0d9488',
+  '#0ea5e9',
+  '#84cc16',
   '#eab308',
   '#f97316',
   '#ef4444',
-  '#ec4899',
-  '#a855f7',
+  '#06b6d4',
+  '#3b82f6',
   '#64748b',
 ];

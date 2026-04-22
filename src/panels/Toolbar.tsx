@@ -81,17 +81,17 @@ export function Toolbar({
   };
 
   return (
-    <header className="flex shrink-0 items-center gap-1.5 border-b border-slate-200 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
-      <div className="flex items-center gap-1.5 pr-2 font-semibold text-slate-800 dark:text-slate-100">
-        <LayoutDashboard size={16} className="text-brand" />
+    <header className="flex shrink-0 items-center gap-1.5 border-b border-emerald-900 bg-emerald-950/90 px-3 py-2 backdrop-blur">
+      <div className="flex items-center gap-1.5 pr-2 font-semibold text-emerald-100">
+        <LayoutDashboard size={16} className="text-emerald-400" />
         <span>Align Canvas</span>
       </div>
 
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-emerald-800" />
 
       <button
         type="button"
-        className="btn-primary !px-2"
+        className="inline-flex items-center rounded-md bg-emerald-600 px-2 py-1.5 text-white shadow-sm transition hover:bg-emerald-500"
         onClick={onQuickAdd}
         title="新增單一指標"
         aria-label="新增"
@@ -105,7 +105,7 @@ export function Toolbar({
         <LayoutDashboard size={14} /> 重新排版
       </button>
 
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-emerald-800" />
 
       <button
         type="button"
@@ -128,15 +128,15 @@ export function Toolbar({
         <Redo2 size={15} />
       </button>
 
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-emerald-800" />
 
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
-      <div className="flex items-center gap-1 rounded-md border border-slate-300 px-1 py-1 dark:border-slate-700">
+      <div className="mx-1 h-5 w-px bg-emerald-800" />
+      <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1 py-1">
         <button
           type="button"
           className={[
             'btn-ghost !p-1.5',
-            interactionMode === 'pan' ? '!bg-slate-100 dark:!bg-slate-800' : '',
+            interactionMode === 'pan' ? '!bg-emerald-800' : '',
           ].join(' ')}
           title="拖曳畫布模式"
           aria-label="拖曳畫布模式"
@@ -148,7 +148,7 @@ export function Toolbar({
           type="button"
           className={[
             'btn-ghost !p-1.5',
-            interactionMode === 'select' ? '!bg-slate-100 dark:!bg-slate-800' : '',
+            interactionMode === 'select' ? '!bg-emerald-800' : '',
           ].join(' ')}
           title="框選節點模式"
           aria-label="框選節點模式"
@@ -158,8 +158,8 @@ export function Toolbar({
         </button>
       </div>
 
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
-      <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+      <div className="mx-1 h-5 w-px bg-emerald-800" />
+      <label className="flex items-center gap-1.5 text-xs text-emerald-200">
         <span>排版方向</span>
         <select
           className="input !w-auto !py-1 !pr-7 text-xs"

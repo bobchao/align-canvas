@@ -39,6 +39,50 @@ export function useShortcuts() {
       if (e.key === 'Escape') {
         useGraphStore.getState().setHighlightSeed(null);
         useGraphStore.getState().setSelectedKpi(null);
+        useGraphStore.getState().setSelectedKpis([]);
+        return;
+      }
+
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        if (inEditable) return;
+
+        const {
+          selectedKpiIds,
+          selectedKpiId,
+          relations,
+          removeKpi,
+          setSelectedKpis,
+        } = useGraphStore.getState();
+
+        const ids =
+          selectedKpiIds.length > 0
+            ? [...selectedKpiIds]
+            : selectedKpiId
+              ? [selectedKpiId]
+              : [];
+        if (ids.length === 0) return;
+
+        e.preventDefault();
+
+        const idSet = new Set(ids);
+        const relatedEdgesCount = relations.filter(
+          (r) => idSet.has(r.sourceId) || idSet.has(r.targetId),
+        ).length;
+        const needsConfirm = ids.length > 1 || relatedEdgesCount > 0;
+
+        if (needsConfirm) {
+          const message =
+            ids.length > 1
+              ? `確定要刪除這 ${ids.length} 個節點嗎？\\n相關連線也會一併刪除（可用 Cmd/Ctrl+Z 復原）。`
+              : `此節點目前有 ${relatedEdgesCount} 條關聯連線。\\n確定要刪除嗎？`;
+          const confirmed = window.confirm(message);
+          if (!confirmed) return;
+        }
+
+        for (const id of ids) {
+          removeKpi(id);
+        }
+        setSelectedKpis([]);
       }
     };
     document.addEventListener('keydown', onKey);

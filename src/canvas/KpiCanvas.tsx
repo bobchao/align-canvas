@@ -289,6 +289,7 @@ export function KpiCanvas({
       onEdgeClick={handleEdgeClick}
       onPaneClick={handlePaneClick}
       connectionMode={ConnectionMode.Loose}
+      deleteKeyCode={null}
       selectionOnDrag={interactionMode === 'select'}
       selectionMode={SelectionMode.Partial}
       multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
@@ -300,8 +301,14 @@ export function KpiCanvas({
       maxZoom={2}
       proOptions={{ hideAttribution: true }}
     >
-      <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-      <MiniMap pannable zoomable className="!bg-white/80 dark:!bg-slate-900/80" />
+      <Background
+        variant={BackgroundVariant.Dots}
+        gap={16}
+        size={1}
+        color="#14532d"
+        bgColor="#02140d"
+      />
+      <MiniMap pannable zoomable className="!bg-emerald-950/90" />
       <Controls showInteractive={false} className="!shadow-sm" />
     </ReactFlow>
   );

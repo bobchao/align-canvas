@@ -82,7 +82,7 @@ export default function App() {
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
                       onClick={() => setBatchOpen(true)}
                     >
                       <Plus size={14} /> 批次新增

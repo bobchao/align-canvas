@@ -12,19 +12,19 @@ function KpiNodeImpl(props: NodeProps) {
   const data = props.data as KpiNodeData;
   const { kpi, highlighted } = data;
   const selected = props.selected;
-  const color = kpi.color ?? '#6366f1';
+  const color = kpi.color ?? '#22c55e';
   const handleClass =
     '!h-5 !w-5 !border !border-brand/60 !bg-brand/15 !opacity-0 group-hover:!opacity-100 hover:!opacity-100 hover:!bg-brand/35 transition';
 
   return (
     <div
       className={[
-        'group relative flex h-[72px] w-[200px] items-stretch overflow-hidden rounded-lg border bg-white shadow-sm transition dark:bg-slate-900',
+        'group relative flex h-[72px] w-[200px] items-stretch overflow-hidden rounded-lg border bg-emerald-950 shadow-sm transition',
         selected
           ? 'border-brand ring-2 ring-brand/50'
           : highlighted
             ? 'border-brand/70'
-            : 'border-slate-200 dark:border-slate-700',
+            : 'border-emerald-800',
       ].join(' ')}
       title={kpi.note ?? ''}
     >
@@ -34,11 +34,11 @@ function KpiNodeImpl(props: NodeProps) {
         style={{ backgroundColor: color }}
       />
       <div className="flex min-w-0 flex-1 flex-col justify-center px-3 py-2">
-        <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <div className="truncate text-sm font-semibold text-emerald-100">
           {kpi.name}
         </div>
         {kpi.note ? (
-          <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+          <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-emerald-300">
             {kpi.note}
           </div>
         ) : null}
