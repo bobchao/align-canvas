@@ -1,0 +1,278 @@
+import { Highlighter, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useGraphStore } from '../store/useGraphStore';
+import { KPI_COLOR_PALETTE } from '../types';
+import { toast } from '../ui/Toast';
+
+export function KpiInspector() {
+  const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
+  const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
+  const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
+  const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
+  const kpis = useGraphStore((s) => s.kpis);
+  const relations = useGraphStore((s) => s.relations);
+  const updateKpi = useGraphStore((s) => s.updateKpi);
+  const removeKpi = useGraphStore((s) => s.removeKpi);
+  const removeRelation = useGraphStore((s) => s.removeRelation);
+
+  const kpi = useMemo(
+    () => kpis.find((k) => k.id === selectedKpiId) ?? null,
+    [kpis, selectedKpiId],
+  );
+
+  const [name, setName] = useState('');
+  const [note, setNote] = useState('');
+  const [color, setColor] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (kpi) {
+      setName(kpi.name);
+      setNote(kpi.note ?? '');
+      setColor(kpi.color);
+    }
+  }, [kpi]);
+
+  if (!kpi) {
+    return (
+      <aside className="panel w-[320px] shrink-0 p-4 text-sm text-slate-500 dark:text-slate-400">
+        <div className="font-medium text-slate-700 dark:text-slate-200">尚未選取指標</div>
+        <p className="mt-2 leading-relaxed">
+          點擊畫布上的任一 KPI 節點來編輯內容、Highlight 相關指標或刪除該項。
+        </p>
+        <div className="mt-4 rounded-md bg-slate-50 p-3 text-xs leading-relaxed text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+          <div className="font-semibold text-slate-700 dark:text-slate-200">快捷鍵</div>
+          <ul className="mt-2 space-y-1">
+            <li>
+              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">Z</kbd> 復原
+            </li>
+            <li>
+              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">Shift</kbd> +{' '}
+              <kbd className="kbd">Z</kbd> 重做
+            </li>
+            <li>
+              <kbd className="kbd">Esc</kbd> 取消 Highlight
+            </li>
+          </ul>
+        </div>
+      </aside>
+    );
+  }
+
+  const incoming = relations.filter((r) => r.targetId === kpi.id);
+  const outgoing = relations.filter((r) => r.sourceId === kpi.id);
+
+  const commitEdits = () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast('error', '名稱不能為空');
+      setName(kpi.name);
+      return;
+    }
+    const noteTrim = note.trim();
+    if (
+      trimmed === kpi.name &&
+      (noteTrim || '') === (kpi.note || '') &&
+      color === kpi.color
+    ) {
+      return;
+    }
+    updateKpi(kpi.id, {
+      name: trimmed,
+      note: noteTrim || undefined,
+      color,
+    });
+  };
+
+  const toggleHighlight = () => {
+    if (highlightSeedId === kpi.id) {
+      setHighlightSeed(null);
+    } else {
+      setHighlightSeed(kpi.id);
+    }
+  };
+
+  const handleDelete = () => {
+    removeKpi(kpi.id);
+    toast('success', `已刪除 ${kpi.name}（可用 Cmd+Z 還原）`);
+  };
+
+  const lookupName = (id: string) => kpis.find((x) => x.id === id)?.name ?? '(未知)';
+
+  return (
+    <aside className="panel flex w-[320px] shrink-0 flex-col overflow-hidden">
+      <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            KPI 詳情
+          </div>
+          <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
+            {kpi.name}
+          </div>
+        </div>
+        <button
+          type="button"
+          className="btn-ghost !p-1"
+          onClick={() => setSelectedKpi(null)}
+          aria-label="關閉"
+        >
+          <X size={16} />
+        </button>
+      </header>
+
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <div>
+          <label className="label">名稱</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={commitEdits}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+            }}
+            className="input"
+          />
+        </div>
+        <div>
+          <label className="label">備註</label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={commitEdits}
+            className="input min-h-[72px] resize-y"
+          />
+        </div>
+        <div>
+          <label className="label">分類顏色</label>
+          <div className="flex flex-wrap gap-2">
+            {KPI_COLOR_PALETTE.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setColor(c);
+                  updateKpi(kpi.id, { color: c });
+                }}
+                className={[
+                  'h-6 w-6 rounded-full border-2 transition',
+                  color === c
+                    ? 'border-slate-900 dark:border-white'
+                    : 'border-transparent',
+                ].join(' ')}
+                style={{ backgroundColor: c }}
+                aria-label={c}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={[
+              'btn',
+              highlightSeedId === kpi.id
+                ? '!border-brand !bg-brand/10 !text-brand-dark dark:!text-brand-light'
+                : '',
+            ].join(' ')}
+            onClick={toggleHighlight}
+          >
+            <Highlighter size={14} />
+            {highlightSeedId === kpi.id ? '取消 Highlight' : 'Highlight'}
+          </button>
+          <button
+            type="button"
+            className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
+            onClick={handleDelete}
+          >
+            <Trash2 size={14} /> 刪除
+          </button>
+        </div>
+
+        <section>
+          <div className="label">受哪些指標影響（{incoming.length}）</div>
+          {incoming.length === 0 ? (
+            <p className="text-xs text-slate-500 dark:text-slate-400">尚無</p>
+          ) : (
+            <ul className="space-y-1">
+              {incoming.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between rounded-md border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-800"
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <RelationBadge
+                      direction={r.direction}
+                      strength={r.strength}
+                    />
+                    <span className="truncate">{lookupName(r.sourceId)}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost !p-1 text-slate-400 hover:text-rose-600"
+                    onClick={() => removeRelation(r.id)}
+                    aria-label="刪除關係"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section>
+          <div className="label">影響哪些指標（{outgoing.length}）</div>
+          {outgoing.length === 0 ? (
+            <p className="text-xs text-slate-500 dark:text-slate-400">尚無</p>
+          ) : (
+            <ul className="space-y-1">
+              {outgoing.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between rounded-md border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-800"
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <RelationBadge
+                      direction={r.direction}
+                      strength={r.strength}
+                    />
+                    <span className="truncate">{lookupName(r.targetId)}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost !p-1 text-slate-400 hover:text-rose-600"
+                    onClick={() => removeRelation(r.id)}
+                    aria-label="刪除關係"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+    </aside>
+  );
+}
+
+function RelationBadge({
+  direction,
+  strength,
+}: {
+  direction: 'positive' | 'negative';
+  strength: 'direct' | 'indirect';
+}) {
+  const color = direction === 'positive' ? '#16a34a' : '#dc2626';
+  const label =
+    (direction === 'positive' ? '+' : '−') +
+    (strength === 'direct' ? '直' : '間');
+  return (
+    <span
+      className="inline-flex h-4 min-w-[1.5rem] shrink-0 items-center justify-center rounded px-1 text-[10px] font-medium text-white"
+      style={{ backgroundColor: color }}
+    >
+      {label}
+    </span>
+  );
+}
