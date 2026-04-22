@@ -13,6 +13,8 @@ function KpiNodeImpl(props: NodeProps) {
   const data = props.data as KpiNodeData;
   const { kpi, highlighted, selected } = data;
   const color = kpi.color ?? '#6366f1';
+  const handleClass =
+    '!h-3 !w-3 !border-0 !bg-transparent !opacity-0';
 
   return (
     <div
@@ -42,28 +44,24 @@ function KpiNodeImpl(props: NodeProps) {
         ) : null}
       </div>
 
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!h-2 !w-2 !border !border-slate-300 !bg-white dark:!border-slate-600 dark:!bg-slate-800"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-2 !w-2 !border !border-slate-300 !bg-white dark:!border-slate-600 dark:!bg-slate-800"
-      />
-      <Handle
-        type="target"
-        id="t-top"
-        position={Position.Top}
-        className="!h-2 !w-2 !border !border-slate-300 !bg-white dark:!border-slate-600 dark:!bg-slate-800"
-      />
-      <Handle
-        type="source"
-        id="s-bottom"
-        position={Position.Bottom}
-        className="!h-2 !w-2 !border !border-slate-300 !bg-white dark:!border-slate-600 dark:!bg-slate-800"
-      />
+      {[Position.Left, Position.Right, Position.Top, Position.Bottom].map((position) => (
+        <Handle
+          key={`source-${position}`}
+          id={`s-${position}`}
+          type="source"
+          position={position}
+          className={handleClass}
+        />
+      ))}
+      {[Position.Left, Position.Right, Position.Top, Position.Bottom].map((position) => (
+        <Handle
+          key={`target-${position}`}
+          id={`t-${position}`}
+          type="target"
+          position={position}
+          className={handleClass}
+        />
+      ))}
     </div>
   );
 }

@@ -6,12 +6,15 @@ import { toast } from '../ui/Toast';
 
 export function KpiInspector() {
   const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
+  const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
+  const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
   const updateKpi = useGraphStore((s) => s.updateKpi);
+  const updateKpiColors = useGraphStore((s) => s.updateKpiColors);
   const removeKpi = useGraphStore((s) => s.removeKpi);
   const removeRelation = useGraphStore((s) => s.removeRelation);
 
@@ -31,6 +34,96 @@ export function KpiInspector() {
       setColor(kpi.color);
     }
   }, [kpi]);
+
+  const selectedKpis = useMemo(
+    () => kpis.filter((k) => selectedKpiIds.includes(k.id)),
+    [kpis, selectedKpiIds],
+  );
+  const isMultiSelected = selectedKpis.length > 1;
+
+  if (isMultiSelected) {
+    return (
+      <aside className="panel flex w-[320px] shrink-0 flex-col overflow-hidden">
+        <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+          <div className="min-w-0">
+            <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              多選模式
+            </div>
+            <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
+              已選取 {selectedKpis.length} 個指標
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-ghost !p-1"
+            onClick={() => setSelectedKpis([])}
+            aria-label="清除選取"
+          >
+            <X size={16} />
+          </button>
+        </header>
+        <div className="space-y-4 p-4">
+          <div>
+            <label className="label">批次設定分類顏色</label>
+            <div className="flex flex-wrap gap-2">
+              {KPI_COLOR_PALETTE.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    updateKpiColors(selectedKpiIds, c);
+                    toast('success', `已更新 ${selectedKpiIds.length} 個指標分類`);
+                  }}
+                  className="h-6 w-6 rounded-full border-2 border-transparent transition hover:border-slate-900 dark:hover:border-white"
+                  style={{ backgroundColor: c }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="btn mt-3"
+              onClick={() => {
+                updateKpiColors(selectedKpiIds, undefined);
+                toast('success', `已清除 ${selectedKpiIds.length} 個指標分類`);
+              }}
+            >
+              清除分類顏色
+            </button>
+          </div>
+          <div>
+            <div className="label">已選取指標</div>
+            <ul className="max-h-[300px] space-y-1 overflow-y-auto">
+              {selectedKpis.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between rounded-md border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-800"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: item.color ?? '#94a3b8' }}
+                    />
+                    <span className="truncate">{item.name}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost !p-1 text-slate-400"
+                    onClick={() =>
+                      setSelectedKpis(selectedKpiIds.filter((id) => id !== item.id))
+                    }
+                    aria-label="移出選取"
+                  >
+                    <X size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   if (!kpi) {
     return (

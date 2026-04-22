@@ -24,6 +24,8 @@ interface GraphState {
   highlightSeedId: string | null;
   /** UI-only: inspector selection */
   selectedKpiId: string | null;
+  /** UI-only: current multi-selection (box select / shift select) */
+  selectedKpiIds: string[];
   /** whether persisted state has been loaded (to avoid saving an empty state) */
   hydrated: boolean;
 
@@ -46,6 +48,7 @@ interface GraphState {
   /** commit any pending transient positions as a single undoable batch */
   commitPositions(previous: Record<string, { x: number; y: number } | undefined>): void;
   removeKpi(id: string): void;
+  updateKpiColors(ids: string[], color: string | undefined): void;
 
   addRelation(input: {
     sourceId: string;
@@ -59,6 +62,7 @@ interface GraphState {
 
   setHighlightSeed(id: string | null): void;
   setSelectedKpi(id: string | null): void;
+  setSelectedKpis(ids: string[]): void;
 
   /** imperative replacement used by import */
   replaceAll(payload: { kpis: KPI[]; relations: Relation[] }, label?: string): void;
@@ -86,6 +90,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
     preferences: DEFAULT_PREFERENCES,
     highlightSeedId: null,
     selectedKpiId: null,
+    selectedKpiIds: [],
     hydrated: false,
     past: [],
     future: [],
@@ -195,6 +200,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
           kpis: s.kpis.filter((k) => k.id !== id),
           relations: s.relations.filter((r) => r.sourceId !== id && r.targetId !== id),
           selectedKpiId: s.selectedKpiId === id ? null : s.selectedKpiId,
+          selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
           highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
         }));
       const revert = () =>
@@ -205,6 +211,37 @@ export const useGraphStore = create<GraphState>((set, get) => {
       apply();
       pushHistory({
         label: `刪除 ${kpi.name}`,
+        undo: revert,
+        redo: apply,
+      });
+    },
+
+    updateKpiColors(ids, color) {
+      const uniqueIds = Array.from(new Set(ids));
+      if (uniqueIds.length === 0) return;
+      const before = get().kpis
+        .filter((k) => uniqueIds.includes(k.id))
+        .map((k) => ({ id: k.id, color: k.color, updatedAt: k.updatedAt }));
+      if (before.length === 0) return;
+
+      const apply = () =>
+        set((s) => ({
+          kpis: s.kpis.map((k) =>
+            uniqueIds.includes(k.id)
+              ? { ...k, color, updatedAt: Date.now() }
+              : k,
+          ),
+        }));
+      const revert = () =>
+        set((s) => ({
+          kpis: s.kpis.map((k) => {
+            const prev = before.find((x) => x.id === k.id);
+            return prev ? { ...k, color: prev.color, updatedAt: prev.updatedAt } : k;
+          }),
+        }));
+      apply();
+      pushHistory({
+        label: uniqueIds.length > 1 ? `批次設定 ${uniqueIds.length} 個分類` : '設定分類',
         undo: revert,
         redo: apply,
       });
@@ -260,13 +297,44 @@ export const useGraphStore = create<GraphState>((set, get) => {
     },
 
     setSelectedKpi(id) {
-      set({ selectedKpiId: id });
+      const nextIds = id ? [id] : [];
+      const prev = get();
+      if (
+        prev.selectedKpiId === id &&
+        prev.selectedKpiIds.length === nextIds.length &&
+        prev.selectedKpiIds.every((x, idx) => x === nextIds[idx])
+      ) {
+        return;
+      }
+      set({ selectedKpiId: id, selectedKpiIds: nextIds });
+    },
+
+    setSelectedKpis(ids) {
+      const unique = Array.from(new Set(ids)).sort();
+      const prev = get();
+      if (
+        prev.selectedKpiIds.length === unique.length &&
+        prev.selectedKpiIds.every((x, idx) => x === unique[idx]) &&
+        prev.selectedKpiId === (unique.length === 1 ? unique[0] : null)
+      ) {
+        return;
+      }
+      set({
+        selectedKpiIds: unique,
+        selectedKpiId: unique.length === 1 ? unique[0] : null,
+      });
     },
 
     replaceAll({ kpis, relations }, label = '匯入資料') {
       const prev = { kpis: get().kpis, relations: get().relations };
       const apply = () =>
-        set({ kpis, relations, selectedKpiId: null, highlightSeedId: null });
+        set({
+          kpis,
+          relations,
+          selectedKpiId: null,
+          selectedKpiIds: [],
+          highlightSeedId: null,
+        });
       const revert = () =>
         set({ kpis: prev.kpis, relations: prev.relations });
       apply();

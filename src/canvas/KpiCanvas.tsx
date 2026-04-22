@@ -1,10 +1,12 @@
 import {
   Background,
   BackgroundVariant,
+  ConnectionMode,
   Controls,
   MarkerType,
   MiniMap,
   ReactFlow,
+  SelectionMode,
   applyNodeChanges,
   useReactFlow,
   type Connection,
@@ -36,8 +38,9 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   const relations = useGraphStore((s) => s.relations);
   const preferences = useGraphStore((s) => s.preferences);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
-  const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
+  const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
+  const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
   const updateKpiPosition = useGraphStore((s) => s.updateKpiPosition);
   const commitPositions = useGraphStore((s) => s.commitPositions);
@@ -93,13 +96,13 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
           kpi: k,
           highlighted,
           dimmed,
-          selected: selectedKpiId === k.id,
+          selected: selectedKpiIds.includes(k.id),
         },
         className: dimmed ? 'kpi-dimmed' : undefined,
-        selected: selectedKpiId === k.id,
+        selected: selectedKpiIds.includes(k.id),
       };
     });
-  }, [kpis, highlight, selectedKpiId]);
+  }, [kpis, highlight, selectedKpiIds]);
 
   const edges = useMemo<Edge<RelationEdgeData>[]>(() => {
     return relations.map((r: Relation) => {
@@ -172,10 +175,17 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   );
 
   const handleNodeClick: NodeMouseHandler = useCallback(
-    (_, node) => {
+    (event, node) => {
+      if (event.shiftKey || event.metaKey || event.ctrlKey) {
+        const next = selectedKpiIds.includes(node.id)
+          ? selectedKpiIds.filter((id) => id !== node.id)
+          : [...selectedKpiIds, node.id];
+        setSelectedKpis(next);
+        return;
+      }
       setSelectedKpi(node.id);
     },
-    [setSelectedKpi],
+    [selectedKpiIds, setSelectedKpi, setSelectedKpis],
   );
 
   const handleEdgeClick: EdgeMouseHandler = useCallback(
@@ -186,9 +196,9 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   );
 
   const handlePaneClick = useCallback(() => {
-    setSelectedKpi(null);
+    setSelectedKpis([]);
     setHighlightSeed(null);
-  }, [setSelectedKpi, setHighlightSeed]);
+  }, [setSelectedKpis, setHighlightSeed]);
 
   return (
     <ReactFlow
@@ -201,6 +211,14 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
       onPaneClick={handlePaneClick}
+      onSelectionChange={({ nodes: selectedNodes }) =>
+        setSelectedKpis(selectedNodes.map((n) => n.id))
+      }
+      connectionMode={ConnectionMode.Loose}
+      selectionOnDrag
+      selectionMode={SelectionMode.Partial}
+      multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
+      panOnDrag={[2]}
       fitView
       fitViewOptions={{ padding: 0.2 }}
       minZoom={0.2}
