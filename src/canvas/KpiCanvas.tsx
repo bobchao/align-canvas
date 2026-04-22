@@ -14,6 +14,8 @@ import {
   type EdgeMouseHandler,
   type Node,
   type NodeChange,
+  type OnConnectStart,
+  type OnConnectEnd,
   type OnConnect,
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -48,6 +50,7 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   /** remember the "before drag" position to build a single undo entry on drag stop */
   const dragStartRef = useRef<Record<string, { x: number; y: number } | undefined>>({});
   const prevNodeCountRef = useRef(0);
+  const connectStartRef = useRef<{ nodeId: string | null }>({ nodeId: null });
 
   // Ensure all KPIs have positions (auto-layout for newly added ones).
   useEffect(() => {
@@ -199,10 +202,36 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
     [nodes, kpis, selectedKpiIds, updateKpiPosition, commitPositions, setSelectedKpis],
   );
 
+  const handleConnectStart: OnConnectStart = useCallback((_, params) => {
+    connectStartRef.current = { nodeId: params.nodeId ?? null };
+  }, []);
+
+  const handleConnectEnd: OnConnectEnd = useCallback(() => {
+    connectStartRef.current = { nodeId: null };
+  }, []);
+
   const handleConnect: OnConnect = useCallback(
     (conn: Connection) => {
       if (!conn.source || !conn.target || conn.source === conn.target) return;
-      onRequestCreateRelation(conn.source, conn.target);
+      let sourceId = conn.source;
+      let targetId = conn.target;
+
+      const startNodeId = connectStartRef.current.nodeId;
+      if (startNodeId && startNodeId !== sourceId && startNodeId === targetId) {
+        // In loose mode, React Flow may report reversed source/target.
+        sourceId = conn.target;
+        targetId = conn.source;
+      } else if (
+        conn.sourceHandle?.startsWith('t-') ||
+        conn.targetHandle?.startsWith('s-')
+      ) {
+        // Fallback normalization by handle prefix.
+        sourceId = conn.target;
+        targetId = conn.source;
+      }
+
+      if (sourceId === targetId) return;
+      onRequestCreateRelation(sourceId, targetId);
     },
     [onRequestCreateRelation],
   );
@@ -226,6 +255,8 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       onNodesChange={handleNodesChange}
+      onConnectStart={handleConnectStart}
+      onConnectEnd={handleConnectEnd}
       onConnect={handleConnect}
       onEdgeClick={handleEdgeClick}
       onPaneClick={handlePaneClick}
