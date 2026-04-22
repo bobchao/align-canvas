@@ -14,7 +14,6 @@ import {
   type EdgeMouseHandler,
   type Node,
   type NodeChange,
-  type NodeMouseHandler,
   type OnConnect,
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -39,7 +38,6 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   const preferences = useGraphStore((s) => s.preferences);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
-  const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
   const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
   const updateKpiPosition = useGraphStore((s) => s.updateKpiPosition);
@@ -96,13 +94,11 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
           kpi: k,
           highlighted,
           dimmed,
-          selected: selectedKpiIds.includes(k.id),
         },
         className: dimmed ? 'kpi-dimmed' : undefined,
-        selected: selectedKpiIds.includes(k.id),
       };
     });
-  }, [kpis, highlight, selectedKpiIds]);
+  }, [kpis, highlight]);
 
   const edges = useMemo<Edge<RelationEdgeData>[]>(() => {
     const positionMap = new Map(
@@ -163,8 +159,16 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
+      let selectionChanged = false;
+      const nextSelected = new Set(selectedKpiIds);
+
       // We only care about position-related changes; selection and others are handled via clicks.
       for (const change of changes) {
+        if (change.type === 'select') {
+          selectionChanged = true;
+          if (change.selected) nextSelected.add(change.id);
+          else nextSelected.delete(change.id);
+        }
         if (change.type === 'position' && change.dragging === true) {
           if (dragStartRef.current[change.id] === undefined) {
             const k = kpis.find((x) => x.id === change.id);
@@ -188,8 +192,11 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
         commitPositions(dragStartRef.current);
         dragStartRef.current = {};
       }
+      if (selectionChanged) {
+        setSelectedKpis(Array.from(nextSelected));
+      }
     },
-    [nodes, kpis, updateKpiPosition, commitPositions],
+    [nodes, kpis, selectedKpiIds, updateKpiPosition, commitPositions, setSelectedKpis],
   );
 
   const handleConnect: OnConnect = useCallback(
@@ -198,20 +205,6 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       onRequestCreateRelation(conn.source, conn.target);
     },
     [onRequestCreateRelation],
-  );
-
-  const handleNodeClick: NodeMouseHandler = useCallback(
-    (event, node) => {
-      if (event.shiftKey || event.metaKey || event.ctrlKey) {
-        const next = selectedKpiIds.includes(node.id)
-          ? selectedKpiIds.filter((id) => id !== node.id)
-          : [...selectedKpiIds, node.id];
-        setSelectedKpis(next);
-        return;
-      }
-      setSelectedKpi(node.id);
-    },
-    [selectedKpiIds, setSelectedKpi, setSelectedKpis],
   );
 
   const handleEdgeClick: EdgeMouseHandler = useCallback(
@@ -234,12 +227,8 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       edgeTypes={edgeTypes}
       onNodesChange={handleNodesChange}
       onConnect={handleConnect}
-      onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
       onPaneClick={handlePaneClick}
-      onSelectionChange={({ nodes: selectedNodes = [] }) =>
-        setSelectedKpis(selectedNodes.map((n) => n.id))
-      }
       connectionMode={ConnectionMode.Loose}
       selectionOnDrag
       selectionMode={SelectionMode.Partial}

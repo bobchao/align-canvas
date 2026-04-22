@@ -6,12 +6,12 @@ export interface KpiNodeData extends Record<string, unknown> {
   kpi: KPI;
   highlighted: boolean;
   dimmed: boolean;
-  selected: boolean;
 }
 
 function KpiNodeImpl(props: NodeProps) {
   const data = props.data as KpiNodeData;
-  const { kpi, highlighted, selected } = data;
+  const { kpi, highlighted } = data;
+  const selected = props.selected;
   const color = kpi.color ?? '#6366f1';
   const handleClass =
     '!h-3 !w-3 !border-0 !bg-transparent !opacity-0';
