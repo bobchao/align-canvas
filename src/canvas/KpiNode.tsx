@@ -14,7 +14,7 @@ function KpiNodeImpl(props: NodeProps) {
   const selected = props.selected;
   const color = kpi.color ?? '#6366f1';
   const handleClass =
-    '!h-3 !w-3 !border-0 !bg-transparent !opacity-0';
+    '!h-5 !w-5 !border !border-brand/60 !bg-brand/15 !opacity-0 group-hover:!opacity-100 hover:!opacity-100 hover:!bg-brand/35 transition';
 
   return (
     <div
@@ -50,7 +50,7 @@ function KpiNodeImpl(props: NodeProps) {
           id={`s-${position}`}
           type="source"
           position={position}
-          className={handleClass}
+          className={`${handleClass} kpi-handle`}
         />
       ))}
       {[Position.Left, Position.Right, Position.Top, Position.Bottom].map((position) => (
@@ -59,7 +59,7 @@ function KpiNodeImpl(props: NodeProps) {
           id={`t-${position}`}
           type="target"
           position={position}
-          className={handleClass}
+          className={`${handleClass} kpi-handle`}
         />
       ))}
     </div>

@@ -1,5 +1,7 @@
 import {
+  Hand,
   Download,
+  MousePointer2,
   LayoutDashboard,
   ListPlus,
   Plus,
@@ -15,17 +17,25 @@ import { computeLayout } from '../canvas/layout';
 
 interface Props {
   onBatchAdd: () => void;
+  onQuickAdd: () => void;
   onImportChoice: (incoming: { kpis: ReturnType<typeof parseSnapshot>['kpis']; relations: ReturnType<typeof parseSnapshot>['relations'] }) => void;
+  interactionMode: 'pan' | 'select';
+  onChangeInteractionMode: (mode: 'pan' | 'select') => void;
 }
 
-export function Toolbar({ onBatchAdd, onImportChoice }: Props) {
+export function Toolbar({
+  onBatchAdd,
+  onQuickAdd,
+  onImportChoice,
+  interactionMode,
+  onChangeInteractionMode,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
   const preferences = useGraphStore((s) => s.preferences);
   const setPreferences = useGraphStore((s) => s.setPreferences);
-  const addKpi = useGraphStore((s) => s.addKpi);
   const undo = useGraphStore((s) => s.undo);
   const redo = useGraphStore((s) => s.redo);
   const canUndo = useGraphStore((s) => s.past.length > 0);
@@ -70,10 +80,6 @@ export function Toolbar({ onBatchAdd, onImportChoice }: Props) {
     toast('success', '已重新排版');
   };
 
-  const handleQuickAdd = () => {
-    addKpi({ name: `指標 ${kpis.length + 1}` });
-  };
-
   return (
     <header className="flex shrink-0 items-center gap-1.5 border-b border-slate-200 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
       <div className="flex items-center gap-1.5 pr-2 font-semibold text-slate-800 dark:text-slate-100">
@@ -83,8 +89,14 @@ export function Toolbar({ onBatchAdd, onImportChoice }: Props) {
 
       <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
 
-      <button type="button" className="btn-primary" onClick={handleQuickAdd} title="新增單一指標">
-        <Plus size={14} /> 新增
+      <button
+        type="button"
+        className="btn-primary !px-2"
+        onClick={onQuickAdd}
+        title="新增單一指標"
+        aria-label="新增"
+      >
+        <Plus size={15} />
       </button>
       <button type="button" className="btn" onClick={onBatchAdd} title="批次新增">
         <ListPlus size={14} /> 批次
@@ -97,25 +109,56 @@ export function Toolbar({ onBatchAdd, onImportChoice }: Props) {
 
       <button
         type="button"
-        className="btn"
+        className="btn !px-2"
         disabled={!canUndo}
         onClick={undo}
         title="復原 (Cmd/Ctrl+Z)"
+        aria-label="復原"
       >
-        <Undo2 size={14} /> 復原
+        <Undo2 size={15} />
       </button>
       <button
         type="button"
-        className="btn"
+        className="btn !px-2"
         disabled={!canRedo}
         onClick={redo}
         title="重做 (Cmd/Ctrl+Shift+Z)"
+        aria-label="重做"
       >
-        <Redo2 size={14} /> 重做
+        <Redo2 size={15} />
       </button>
 
       <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
 
+      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
+      <div className="flex items-center gap-1 rounded-md border border-slate-300 px-1 py-1 dark:border-slate-700">
+        <button
+          type="button"
+          className={[
+            'btn-ghost !p-1.5',
+            interactionMode === 'pan' ? '!bg-slate-100 dark:!bg-slate-800' : '',
+          ].join(' ')}
+          title="拖曳畫布模式"
+          aria-label="拖曳畫布模式"
+          onClick={() => onChangeInteractionMode('pan')}
+        >
+          <Hand size={14} />
+        </button>
+        <button
+          type="button"
+          className={[
+            'btn-ghost !p-1.5',
+            interactionMode === 'select' ? '!bg-slate-100 dark:!bg-slate-800' : '',
+          ].join(' ')}
+          title="框選節點模式"
+          aria-label="框選節點模式"
+          onClick={() => onChangeInteractionMode('select')}
+        >
+          <MousePointer2 size={14} />
+        </button>
+      </div>
+
+      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
       <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
         <span>排版方向</span>
         <select
@@ -132,11 +175,23 @@ export function Toolbar({ onBatchAdd, onImportChoice }: Props) {
 
       <div className="flex-1" />
 
-      <button type="button" className="btn" onClick={handleExport} title="匯出 JSON">
-        <Download size={14} /> 匯出
+      <button
+        type="button"
+        className="btn !px-2"
+        onClick={handleExport}
+        title="匯出 JSON"
+        aria-label="匯出"
+      >
+        <Download size={15} />
       </button>
-      <button type="button" className="btn" onClick={handleImportClick} title="匯入 JSON">
-        <Upload size={14} /> 匯入
+      <button
+        type="button"
+        className="btn !px-2"
+        onClick={handleImportClick}
+        title="匯入 JSON"
+        aria-label="匯入"
+      >
+        <Upload size={15} />
       </button>
       <input
         ref={fileInputRef}

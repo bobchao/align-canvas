@@ -66,3 +66,8 @@ body {
 .react-flow__edge.kpi-highlighted {
   filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.55));
 }
+
+.kpi-handle {
+  cursor: crosshair;
+  z-index: 3;
+}

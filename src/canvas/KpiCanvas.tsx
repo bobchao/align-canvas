@@ -32,9 +32,18 @@ const edgeTypes = { relation: RelationEdge };
 interface Props {
   onRequestCreateRelation: (sourceId: string, targetId: string) => void;
   onEditRelation: (relationId: string) => void;
+  interactionMode: 'pan' | 'select';
+  focusNodeId: string | null;
+  onFocusHandled: () => void;
 }
 
-export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
+export function KpiCanvas({
+  onRequestCreateRelation,
+  onEditRelation,
+  interactionMode,
+  focusNodeId,
+  onFocusHandled,
+}: Props) {
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
   const preferences = useGraphStore((s) => s.preferences);
@@ -51,6 +60,7 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   const dragStartRef = useRef<Record<string, { x: number; y: number } | undefined>>({});
   const prevNodeCountRef = useRef(0);
   const connectStartRef = useRef<{ nodeId: string | null }>({ nodeId: null });
+  const lastFocusedRef = useRef<string | null>(null);
 
   // Ensure all KPIs have positions (auto-layout for newly added ones).
   useEffect(() => {
@@ -68,6 +78,7 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
 
   // Auto fit when node count jumps up (e.g. after batch add / import / first hydrate).
   useEffect(() => {
+    if (focusNodeId) return;
     const n = kpis.length;
     const prev = prevNodeCountRef.current;
     prevNodeCountRef.current = n;
@@ -78,7 +89,23 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [kpis, rf]);
+  }, [kpis, rf, focusNodeId]);
+
+  useEffect(() => {
+    if (!focusNodeId) return;
+    if (lastFocusedRef.current === focusNodeId) return;
+    const timer = setTimeout(() => {
+      const node = rf.getNode(focusNodeId);
+      if (!node) return;
+      lastFocusedRef.current = focusNodeId;
+      rf.setCenter(node.position.x + 100, node.position.y + 36, {
+        zoom: Math.max(1, rf.getZoom()),
+        duration: 260,
+      });
+      onFocusHandled();
+    }, 90);
+    return () => clearTimeout(timer);
+  }, [focusNodeId, onFocusHandled, rf, kpis.length]);
 
   const highlight = useMemo(() => {
     if (!highlightSeedId) return null;
@@ -261,10 +288,11 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       onEdgeClick={handleEdgeClick}
       onPaneClick={handlePaneClick}
       connectionMode={ConnectionMode.Loose}
-      selectionOnDrag
+      selectionOnDrag={interactionMode === 'select'}
       selectionMode={SelectionMode.Partial}
       multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
-      panOnDrag={[2]}
+      panOnDrag={interactionMode === 'pan' ? true : [2]}
+      connectionRadius={26}
       fitView
       fitViewOptions={{ padding: 0.2 }}
       minZoom={0.2}

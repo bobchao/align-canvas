@@ -21,10 +21,13 @@ export default function App() {
   const relations = useGraphStore((s) => s.relations);
   const replaceAll = useGraphStore((s) => s.replaceAll);
   const addKpi = useGraphStore((s) => s.addKpi);
+  const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
 
   const [batchOpen, setBatchOpen] = useState(false);
   const [relationMode, setRelationMode] = useState<RelationEditorMode>(null);
   const [importPreview, setImportPreview] = useState<ParsedImport | null>(null);
+  const [interactionMode, setInteractionMode] = useState<'pan' | 'select'>('pan');
+  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
   const openCreateRelation = useCallback((sourceId: string, targetId: string) => {
     setRelationMode({ kind: 'create', sourceId, targetId });
@@ -49,6 +52,13 @@ export default function App() {
       <div className="flex h-full flex-col">
         <Toolbar
           onBatchAdd={() => setBatchOpen(true)}
+          onQuickAdd={() => {
+            const created = addKpi({ name: `指標 ${kpis.length + 1}` });
+            setFocusNodeId(created.id);
+            setSelectedKpi(created.id);
+          }}
+          interactionMode={interactionMode}
+          onChangeInteractionMode={setInteractionMode}
           onImportChoice={(incoming) => setImportPreview(incoming)}
         />
         <main className="relative flex min-h-0 flex-1 gap-3 p-3">
@@ -56,6 +66,9 @@ export default function App() {
             <KpiCanvas
               onRequestCreateRelation={openCreateRelation}
               onEditRelation={openEditRelation}
+              interactionMode={interactionMode}
+              focusNodeId={focusNodeId}
+              onFocusHandled={() => setFocusNodeId(null)}
             />
             {isEmpty ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
