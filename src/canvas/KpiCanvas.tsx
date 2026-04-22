@@ -76,13 +76,14 @@ export function KpiCanvas({
     }
   }, [kpis, relations, preferences.layoutDirection, updateKpiPosition]);
 
-  // Auto fit when node count jumps up (e.g. after batch add / import / first hydrate).
+  // Auto fit only for the initial graph load (first hydrate),
+  // so it won't override the "focus newly added node" behavior.
   useEffect(() => {
     if (focusNodeId) return;
     const n = kpis.length;
     const prev = prevNodeCountRef.current;
     prevNodeCountRef.current = n;
-    if (n > 0 && n !== prev && kpis.every((k) => k.position)) {
+    if (n > 0 && prev === 0 && kpis.every((k) => k.position)) {
       // slight delay so React Flow has positioned everything
       const timer = setTimeout(() => {
         rf.fitView({ padding: 0.2, duration: 300 });
@@ -99,8 +100,8 @@ export function KpiCanvas({
       if (!node) return;
       lastFocusedRef.current = focusNodeId;
       rf.setCenter(node.position.x + 100, node.position.y + 36, {
-        zoom: Math.max(1, rf.getZoom()),
-        duration: 260,
+        zoom: 1,
+        duration: 300,
       });
       onFocusHandled();
     }, 90);
