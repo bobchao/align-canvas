@@ -105,14 +105,40 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
   }, [kpis, highlight, selectedKpiIds]);
 
   const edges = useMemo<Edge<RelationEdgeData>[]>(() => {
+    const positionMap = new Map(
+      kpis.map((k) => [k.id, k.position ?? { x: 0, y: 0 }] as const),
+    );
+
+    const pickHandles = (sourceId: string, targetId: string) => {
+      const source = positionMap.get(sourceId);
+      const target = positionMap.get(targetId);
+      if (!source || !target) {
+        return { sourceHandle: 's-right', targetHandle: 't-left' };
+      }
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        return dx >= 0
+          ? { sourceHandle: 's-right', targetHandle: 't-left' }
+          : { sourceHandle: 's-left', targetHandle: 't-right' };
+      }
+      return dy >= 0
+        ? { sourceHandle: 's-bottom', targetHandle: 't-top' }
+        : { sourceHandle: 's-top', targetHandle: 't-bottom' };
+    };
+
     return relations.map((r: Relation) => {
       const highlighted = highlight ? highlight.edgeIds.has(r.id) : false;
       const dimmed = highlight ? !highlighted : false;
       const color = r.direction === 'positive' ? '#16a34a' : '#dc2626';
+      const { sourceHandle, targetHandle } = pickHandles(r.sourceId, r.targetId);
       return {
         id: r.id,
         source: r.sourceId,
         target: r.targetId,
+        sourceHandle,
+        targetHandle,
         type: 'relation',
         data: {
           direction: r.direction,
@@ -133,7 +159,7 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
         },
       };
     });
-  }, [relations, highlight]);
+  }, [relations, highlight, kpis]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -211,7 +237,7 @@ export function KpiCanvas({ onRequestCreateRelation, onEditRelation }: Props) {
       onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
       onPaneClick={handlePaneClick}
-      onSelectionChange={({ nodes: selectedNodes }) =>
+      onSelectionChange={({ nodes: selectedNodes = [] }) =>
         setSelectedKpis(selectedNodes.map((n) => n.id))
       }
       connectionMode={ConnectionMode.Loose}
