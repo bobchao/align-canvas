@@ -39,6 +39,12 @@ npm run build   # 型別檢查 + 產生正式版
 npm run preview # 預覽正式版
 ```
 
+## GitHub Pages
+
+- 已配置 `vite.config.ts` 的 `base: '/align-canvas/'`，可直接部署到專案頁面。
+- Push 到 `main` 後會由 GitHub Actions 自動 build + deploy。
+- 部署網址：`https://bobchao.github.io/align-canvas/`
+
 ## 鍵盤快捷鍵
 
 | 快捷鍵 | 功能 |
