@@ -32,6 +32,7 @@ export function exportToFile(snapshot: GraphSnapshot) {
 }
 
 export interface ParsedImport {
+  /** KPI 可含 `primaryCategoryColor` / `secondaryCategoryColors`；舊檔僅有 `color` 仍有效 */
   kpis: KPI[];
   relations: Relation[];
   colorNames: Record<string, string>;

@@ -22,6 +22,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useGraphStore } from '../store/useGraphStore';
 import { computeHighlight } from '../lib/highlight';
+import { kpiHasCategoryColor } from '../lib/kpiCategory';
 import type { KPI, Relation } from '../types';
 import { computeLayout } from './layout';
 import { KpiNode, type KpiNodeData } from './KpiNode';
@@ -132,7 +133,9 @@ export function KpiCanvas({
   const highlight = useMemo(() => {
     if (highlightCategoryColor) {
       const nodeIds = new Set(
-        kpis.filter((k) => k.color === highlightCategoryColor).map((k) => k.id),
+        kpis
+          .filter((k) => kpiHasCategoryColor(k, highlightCategoryColor))
+          .map((k) => k.id),
       );
       const edgeIds = new Set(
         relations

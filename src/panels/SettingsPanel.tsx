@@ -72,6 +72,23 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
         </section>
 
         <section>
+          <div className="label">畫布顯示</div>
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-emerald-100">
+            <input
+              type="checkbox"
+              className="mt-1 rounded"
+              checked={preferences.showKpiCategoryLabels}
+              onChange={(e) =>
+                setPreferences({ showKpiCategoryLabels: e.target.checked })
+              }
+            />
+            <span>
+              在節點上顯示所屬分類名稱
+            </span>
+          </label>
+        </section>
+
+        <section>
           <div className="label">自動排版方向</div>
           <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1 py-1">
             <button

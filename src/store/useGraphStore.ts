@@ -6,7 +6,8 @@ import type {
   RelationDirection,
   RelationStrength,
 } from '../types';
-import { DEFAULT_PREFERENCES } from '../types';
+import { DEFAULT_KPI_CATEGORY_COLOR, DEFAULT_PREFERENCES } from '../types';
+import { kpiHasCategoryColor, normalizeKpisDefaultPrimary } from '../lib/kpiCategory';
 import { newId } from '../lib/ids';
 import type { PersistedState } from './db';
 import type { ParsedImport } from '../lib/jsonIO';
@@ -53,7 +54,10 @@ interface GraphState {
 
   addKpi(input: { name: string; note?: string; color?: string }): KPI;
   batchAddKpis(names: string[], defaultColor?: string): KPI[];
-  updateKpi(id: string, patch: Partial<Pick<KPI, 'name' | 'note' | 'color'>>): void;
+  updateKpi(
+    id: string,
+    patch: Partial<Pick<KPI, 'name' | 'note' | 'color' | 'primaryCategoryColor' | 'secondaryCategoryColors'>>,
+  ): void;
   updateKpiPosition(id: string, position: { x: number; y: number }): void;
   /** commit any pending transient positions as a single undoable batch */
   commitPositions(previous: Record<string, { x: number; y: number } | undefined>): void;
@@ -176,9 +180,9 @@ export const useGraphStore = create<GraphState>((set, get) => {
 
     hydrate({ kpis, relations, preferences, colorNames = {} }) {
       set({
-        kpis,
+        kpis: normalizeKpisDefaultPrimary(kpis),
         relations,
-        preferences,
+        preferences: { ...DEFAULT_PREFERENCES, ...preferences },
         colorNames,
         hydrated: true,
         past: [],
@@ -194,11 +198,13 @@ export const useGraphStore = create<GraphState>((set, get) => {
     addKpi({ name, note, color }) {
       const now = Date.now();
       const position = findNonOverlappingPosition(get().kpis);
+      const c = color ?? DEFAULT_KPI_CATEGORY_COLOR;
       const kpi: KPI = {
         id: newId('kpi'),
         name: name.trim(),
         note,
-        color,
+        color: c,
+        primaryCategoryColor: c,
         position,
         createdAt: now,
         updatedAt: now,
@@ -221,10 +227,12 @@ export const useGraphStore = create<GraphState>((set, get) => {
         if (existing.has(key) || unique.has(key)) continue;
         unique.set(key, name);
       }
+      const c = defaultColor ?? DEFAULT_KPI_CATEGORY_COLOR;
       const created: KPI[] = Array.from(unique.values()).map((name) => ({
         id: newId('kpi'),
         name,
-        color: defaultColor,
+        color: c,
+        primaryCategoryColor: c,
         createdAt: now,
         updatedAt: now,
       }));
@@ -288,18 +296,16 @@ export const useGraphStore = create<GraphState>((set, get) => {
       const apply = () =>
         set((s) => {
           const nextKpis = s.kpis.filter((node) => node.id !== id);
-          const hasRemainingSameColor =
-            !!kpi.color && nextKpis.some((node) => node.color === kpi.color);
+          const hi = s.highlightCategoryColor;
+          const stillHasHighlighted =
+            hi != null && nextKpis.some((node) => kpiHasCategoryColor(node, hi));
           return {
             kpis: nextKpis,
             relations: s.relations.filter((r) => r.sourceId !== id && r.targetId !== id),
             selectedKpiId: s.selectedKpiId === id ? null : s.selectedKpiId,
             selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
             highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
-            highlightCategoryColor:
-              s.highlightCategoryColor === kpi.color && !hasRemainingSameColor
-                ? null
-                : s.highlightCategoryColor,
+            highlightCategoryColor: hi != null && !stillHasHighlighted ? null : s.highlightCategoryColor,
           };
         });
       const revert = () =>
@@ -318,24 +324,44 @@ export const useGraphStore = create<GraphState>((set, get) => {
     updateKpiColors(ids, color) {
       const uniqueIds = Array.from(new Set(ids));
       if (uniqueIds.length === 0) return;
-      const before = get().kpis
-        .filter((k) => uniqueIds.includes(k.id))
-        .map((k) => ({ id: k.id, color: k.color, updatedAt: k.updatedAt }));
+      const before = get()
+        .kpis.filter((k) => uniqueIds.includes(k.id))
+        .map((k) => ({
+          id: k.id,
+          color: k.color,
+          primaryCategoryColor: k.primaryCategoryColor,
+          secondaryCategoryColors: k.secondaryCategoryColors,
+          updatedAt: k.updatedAt,
+        }));
       if (before.length === 0) return;
 
       const apply = () =>
         set((s) => ({
-          kpis: s.kpis.map((k) =>
-            uniqueIds.includes(k.id)
-              ? { ...k, color, updatedAt: Date.now() }
-              : k,
-          ),
+          kpis: s.kpis.map((k) => {
+            if (!uniqueIds.includes(k.id)) return k;
+            const nextSecondaries = (k.secondaryCategoryColors ?? []).filter((c) => c !== color);
+            return {
+              ...k,
+              color,
+              primaryCategoryColor: color,
+              secondaryCategoryColors: nextSecondaries,
+              updatedAt: Date.now(),
+            };
+          }),
         }));
       const revert = () =>
         set((s) => ({
           kpis: s.kpis.map((k) => {
             const prev = before.find((x) => x.id === k.id);
-            return prev ? { ...k, color: prev.color, updatedAt: prev.updatedAt } : k;
+            return prev
+              ? {
+                  ...k,
+                  color: prev.color,
+                  primaryCategoryColor: prev.primaryCategoryColor,
+                  secondaryCategoryColors: prev.secondaryCategoryColors,
+                  updatedAt: prev.updatedAt,
+                }
+              : k;
           }),
         }));
       apply();
@@ -458,7 +484,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
       set({
         kpis: [],
         relations: [],
-        preferences: local.preferences,
+        preferences: { ...DEFAULT_PREFERENCES, ...local.preferences },
         urlImportConflict: { remote, local: local },
         hydrated: true,
         past: [],
@@ -478,7 +504,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
       };
       const apply = () =>
         set({
-          kpis,
+          kpis: normalizeKpisDefaultPrimary(kpis),
           relations,
           colorNames: colorNames ?? {},
           selectedKpiId: null,

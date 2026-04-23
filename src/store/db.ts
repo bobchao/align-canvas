@@ -48,7 +48,7 @@ export async function loadPersistedState(): Promise<PersistedState> {
   return {
     kpis,
     relations,
-    preferences: preferences ?? DEFAULT_PREFERENCES,
+    preferences: { ...DEFAULT_PREFERENCES, ...preferences },
     colorNames: colorNames ?? {},
   };
 }

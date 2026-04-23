@@ -1,5 +1,10 @@
 import { Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  categoryDisplayLabel,
+  kpiDisplayColor,
+  kpiEffectivePrimaryColor,
+} from '../lib/kpiCategory';
 import { useGraphStore } from '../store/useGraphStore';
 import { KPI_COLOR_PALETTE } from '../types';
 import { toast } from '../ui/Toast';
@@ -16,6 +21,7 @@ export function KpiInspector() {
   const updateKpiColors = useGraphStore((s) => s.updateKpiColors);
   const removeKpi = useGraphStore((s) => s.removeKpi);
   const removeRelation = useGraphStore((s) => s.removeRelation);
+  const colorNames = useGraphStore((s) => s.colorNames);
 
   const kpi = useMemo(
     () => kpis.find((k) => k.id === selectedKpiId) ?? null,
@@ -24,13 +30,11 @@ export function KpiInspector() {
 
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
-  const [color, setColor] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (kpi) {
       setName(kpi.name);
       setNote(kpi.note ?? '');
-      setColor(kpi.color);
     }
   }, [kpi]);
 
@@ -65,7 +69,7 @@ export function KpiInspector() {
           <div>
             <label className="label">批次設定分類顏色</label>
             <div className="flex flex-wrap gap-2">
-              {KPI_COLOR_PALETTE.map((c) => (
+                {KPI_COLOR_PALETTE.map((c) => (
                 <button
                   key={c}
                   type="button"
@@ -75,7 +79,7 @@ export function KpiInspector() {
                   }}
                   className="h-6 w-6 rounded-full border-2 border-transparent transition hover:border-slate-900 dark:hover:border-white"
                   style={{ backgroundColor: c }}
-                  aria-label={c}
+                  aria-label={categoryDisplayLabel(c, colorNames)}
                 />
               ))}
             </div>
@@ -91,7 +95,7 @@ export function KpiInspector() {
                   <span className="flex items-center gap-2 truncate">
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: item.color ?? '#94a3b8' }}
+                      style={{ backgroundColor: kpiDisplayColor(item) }}
                     />
                     <span className="truncate">{item.name}</span>
                   </span>
@@ -151,23 +155,48 @@ export function KpiInspector() {
       return;
     }
     const noteTrim = note.trim();
-    if (
-      trimmed === kpi.name &&
-      (noteTrim || '') === (kpi.note || '') &&
-      color === kpi.color
-    ) {
+    if (trimmed === kpi.name && (noteTrim || '') === (kpi.note || '')) {
       return;
     }
     updateKpi(kpi.id, {
       name: trimmed,
       note: noteTrim || undefined,
-      color,
     });
   };
 
   const handleDelete = () => {
     removeKpi(kpi.id);
     toast('success', `已刪除 ${kpi.name}（可用 Cmd+Z 還原）`);
+  };
+
+  const primaryEffective = kpiEffectivePrimaryColor(kpi);
+  const secondaries = kpi.secondaryCategoryColors ?? [];
+
+  const labelFor = (c: string) => categoryDisplayLabel(c, colorNames);
+
+  const setPrimary = (c: string) => {
+    const nextSec = secondaries.filter((s) => s !== c);
+    updateKpi(kpi.id, {
+      primaryCategoryColor: c,
+      color: c,
+      secondaryCategoryColors: nextSec,
+    });
+  };
+
+  const toggleSecondary = (c: string) => {
+    if (c === primaryEffective) {
+      toast('info', '此為主分類，請先變更上方主分類色。');
+      return;
+    }
+    if (secondaries.includes(c)) {
+      updateKpi(kpi.id, {
+        secondaryCategoryColors: secondaries.filter((s) => s !== c),
+      });
+    } else {
+      updateKpi(kpi.id, {
+        secondaryCategoryColors: [...secondaries, c],
+      });
+    }
   };
 
   const lookupName = (id: string) => kpis.find((x) => x.id === id)?.name ?? '(未知)';
@@ -219,27 +248,84 @@ export function KpiInspector() {
           />
         </div>
         <div>
-          <label className="label">分類顏色</label>
-          <div className="flex flex-wrap gap-2">
+          <label className="label">主分類</label>
+          <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            名稱可至「設定 → 分類命名」自訂。
+          </p>
+          <div className="mb-2 flex items-center gap-2 text-sm text-emerald-100">
+            <span
+              className="inline-block h-4 w-4 shrink-0 rounded-full border border-slate-500/50"
+              style={{ backgroundColor: primaryEffective }}
+              aria-hidden
+            />
+            <span>
+              目前主分類：<span className="font-semibold">{labelFor(primaryEffective)}</span>
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
             {KPI_COLOR_PALETTE.map((c) => (
               <button
                 key={c}
                 type="button"
-                onClick={() => {
-                  setColor(c);
-                  updateKpi(kpi.id, { color: c });
-                }}
+                onClick={() => setPrimary(c)}
+                title={labelFor(c)}
                 className={[
                   'h-6 w-6 rounded-full border-2 transition',
-                  color === c
+                  primaryEffective === c
                     ? 'border-slate-900 dark:border-white'
                     : 'border-transparent',
                 ].join(' ')}
                 style={{ backgroundColor: c }}
-                aria-label={c}
+                aria-label={labelFor(c)}
               />
             ))}
           </div>
+        </div>
+
+        <div>
+          <label className="label">次分類</label>
+          <ul className="mt-1 max-h-40 space-y-0.5 overflow-y-auto rounded-md border border-slate-200 p-1.5 dark:border-slate-800">
+            {KPI_COLOR_PALETTE.map((c) => {
+              if (c === primaryEffective) {
+                return (
+                  <li
+                    key={c}
+                    className="flex cursor-not-allowed items-center gap-2 rounded px-1 py-0.5 text-xs text-slate-500 opacity-60"
+                  >
+                    <input type="checkbox" disabled className="rounded" checked={false} readOnly />
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: c }}
+                    />
+                    <span className="line-through opacity-80">{labelFor(c)}</span>
+                    <span className="text-[10px]">（主分類）</span>
+                  </li>
+                );
+              }
+              const on = secondaries.includes(c);
+              return (
+                <li key={c} className="flex items-center gap-2 rounded px-1 py-0.5 text-xs hover:bg-slate-800/40">
+                  <input
+                    id={`sec-${kpi.id}-${c}`}
+                    type="checkbox"
+                    className="rounded"
+                    checked={on}
+                    onChange={() => toggleSecondary(c)}
+                  />
+                  <label
+                    htmlFor={`sec-${kpi.id}-${c}`}
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: c }}
+                    />
+                    <span className="text-emerald-100">{labelFor(c)}</span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         <section>

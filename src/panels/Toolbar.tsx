@@ -15,6 +15,7 @@ import { useGraphStore } from '../store/useGraphStore';
 import { buildSnapshot, exportToFile } from '../lib/jsonIO';
 import { toast } from '../ui/Toast';
 import { computeLayout } from '../canvas/layout';
+import { countKpisByCategoryColor } from '../lib/kpiCategory';
 import { KPI_COLOR_LABELS } from '../types';
 
 interface Props {
@@ -59,11 +60,7 @@ export function Toolbar({
     toast('success', '已匯出 JSON');
   };
 
-  const colorCounts = kpis.reduce<Record<string, number>>((acc, item) => {
-    if (!item.color) return acc;
-    acc[item.color] = (acc[item.color] ?? 0) + 1;
-    return acc;
-  }, {});
+  const colorCounts = countKpisByCategoryColor(kpis);
 
   const highlightOptions = Object.entries(colorCounts)
     .filter(([, count]) => count > 1)
