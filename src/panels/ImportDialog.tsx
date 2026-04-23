@@ -43,17 +43,17 @@ export function ImportDialog({
         </>
       }
     >
-      <div className="space-y-3 text-sm text-slate-700 dark:text-slate-200">
+      <div className="space-y-3 text-sm text-emerald-100">
         <p>
           匯入檔案包含 <strong>{incoming.kpis.length}</strong> 個指標與{' '}
           <strong>{incoming.relations.length}</strong> 條關係。
         </p>
         {hasCurrent ? (
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-emerald-300">
             目前畫布上已有 {currentStats.kpis} 個指標 / {currentStats.relations} 條關係。
           </p>
         ) : null}
-        <ul className="list-inside list-disc space-y-1 text-xs text-slate-500 dark:text-slate-400">
+        <ul className="list-inside list-disc space-y-1 text-xs text-emerald-300">
           <li>覆蓋：清除目前資料，以匯入檔取代</li>
           {hasCurrent ? <li>合併：以相同 id 進行覆寫，其餘保留</li> : null}
           <li>匯入後仍可以 Cmd/Ctrl+Z 復原</li>

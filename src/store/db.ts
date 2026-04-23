@@ -34,19 +34,22 @@ export interface PersistedState {
   kpis: KPI[];
   relations: Relation[];
   preferences: Preferences;
+  colorNames: Record<string, string>;
 }
 
 export async function loadPersistedState(): Promise<PersistedState> {
   const db = await getDb();
-  const [kpis, relations, preferences] = await Promise.all([
+  const [kpis, relations, preferences, colorNames] = await Promise.all([
     db.getAll(KPI_STORE) as Promise<KPI[]>,
     db.getAll(REL_STORE) as Promise<Relation[]>,
     db.get(META_STORE, 'preferences') as Promise<Preferences | undefined>,
+    db.get(META_STORE, 'colorNames') as Promise<Record<string, string> | undefined>,
   ]);
   return {
     kpis,
     relations,
     preferences: preferences ?? DEFAULT_PREFERENCES,
+    colorNames: colorNames ?? {},
   };
 }
 
@@ -62,6 +65,7 @@ export async function savePersistedState(state: PersistedState): Promise<void> {
   for (const k of state.kpis) await kpiStore.put(k);
   for (const r of state.relations) await relStore.put(r);
   await metaStore.put(state.preferences, 'preferences');
+  await metaStore.put(state.colorNames, 'colorNames');
   await metaStore.put(Date.now(), 'lastSavedAt');
   await tx.done;
 }

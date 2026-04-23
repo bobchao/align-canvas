@@ -13,6 +13,7 @@ import {
   type Edge,
   type EdgeMouseHandler,
   type Node,
+  type NodeMouseHandler,
   type NodeChange,
   type OnConnectStart,
   type OnConnectEnd,
@@ -32,6 +33,8 @@ const edgeTypes = { relation: RelationEdge };
 interface Props {
   onRequestCreateRelation: (sourceId: string, targetId: string) => void;
   onEditRelation: (relationId: string) => void;
+  onClearRelationFocus: () => void;
+  activeRelationId: string | null;
   interactionMode: 'pan' | 'select';
   focusNodeId: string | null;
   onFocusHandled: () => void;
@@ -40,6 +43,8 @@ interface Props {
 export function KpiCanvas({
   onRequestCreateRelation,
   onEditRelation,
+  onClearRelationFocus,
+  activeRelationId,
   interactionMode,
   focusNodeId,
   onFocusHandled,
@@ -49,6 +54,7 @@ export function KpiCanvas({
   const preferences = useGraphStore((s) => s.preferences);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
   const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
+  const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
@@ -143,19 +149,22 @@ export function KpiCanvas({
     return kpis.map((k: KPI) => {
       const highlighted = highlight ? highlight.nodeIds.has(k.id) : false;
       const dimmed = highlight ? !highlighted : false;
+      const isSelected = selectedKpiIds.includes(k.id);
       return {
         id: k.id,
         type: 'kpi',
         position: k.position ?? { x: 0, y: 0 },
+        selected: isSelected,
         data: {
           kpi: k,
           highlighted,
           dimmed,
+          editing: selectedKpiId === k.id,
         },
         className: dimmed ? 'kpi-dimmed' : undefined,
       };
     });
-  }, [kpis, highlight]);
+  }, [kpis, highlight, selectedKpiId, selectedKpiIds]);
 
   const edges = useMemo<Edge<RelationEdgeData>[]>(() => {
     const positionMap = new Map(
@@ -199,6 +208,7 @@ export function KpiCanvas({
           note: r.note,
           highlighted,
           dimmed,
+          editing: activeRelationId === r.id,
         },
         className: [
           dimmed ? 'kpi-dimmed' : '',
@@ -212,7 +222,7 @@ export function KpiCanvas({
         },
       };
     });
-  }, [relations, highlight, kpis]);
+  }, [relations, highlight, kpis, activeRelationId]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -297,10 +307,20 @@ export function KpiCanvas({
     [onEditRelation],
   );
 
+  const handleNodeClick: NodeMouseHandler = useCallback(
+    (_, node) => {
+      // Click always means single-select. Multi-select is reserved for box select.
+      setSelectedKpis([node.id]);
+      setHighlightSeed(node.id);
+    },
+    [setSelectedKpis, setHighlightSeed],
+  );
+
   const handlePaneClick = useCallback(() => {
     setSelectedKpis([]);
     setHighlightSeed(null);
-  }, [setSelectedKpis, setHighlightSeed]);
+    onClearRelationFocus();
+  }, [setSelectedKpis, setHighlightSeed, onClearRelationFocus]);
 
   return (
     <ReactFlow
@@ -313,6 +333,7 @@ export function KpiCanvas({
       onConnectEnd={handleConnectEnd}
       onConnect={handleConnect}
       onEdgeClick={handleEdgeClick}
+      onNodeClick={handleNodeClick}
       onPaneClick={handlePaneClick}
       connectionMode={ConnectionMode.Loose}
       deleteKeyCode={null}
@@ -320,6 +341,8 @@ export function KpiCanvas({
       selectionMode={SelectionMode.Partial}
       multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
       panOnDrag={interactionMode === 'pan' ? true : [2]}
+      panOnScroll
+      zoomOnScroll={false}
       connectionRadius={26}
       fitView
       fitViewOptions={{ padding: 0.2 }}

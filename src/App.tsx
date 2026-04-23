@@ -1,10 +1,11 @@
 import { ReactFlowProvider } from '@xyflow/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { KpiCanvas } from './canvas/KpiCanvas';
 import { BatchAddDialog } from './panels/BatchAddDialog';
 import { ImportDialog } from './panels/ImportDialog';
 import { KpiInspector } from './panels/KpiInspector';
-import { RelationEditor, type RelationEditorMode } from './panels/RelationEditor';
+import { RelationEditor } from './panels/RelationEditor';
+import { SettingsPanel } from './panels/SettingsPanel';
 import { Toolbar } from './panels/Toolbar';
 import { useShortcuts } from './lib/useShortcuts';
 import { usePersistence } from './store/usePersistence';
@@ -20,26 +21,63 @@ export default function App() {
 
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
+  const colorNames = useGraphStore((s) => s.colorNames);
   const replaceAll = useGraphStore((s) => s.replaceAll);
   const addKpi = useGraphStore((s) => s.addKpi);
+  const addRelation = useGraphStore((s) => s.addRelation);
+  const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
+  const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
+  const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
   const urlImportConflict = useGraphStore((s) => s.urlImportConflict);
   const clearUrlImportConflict = useGraphStore((s) => s.clearUrlImportConflict);
   const hydrate = useGraphStore((s) => s.hydrate);
 
   const [batchOpen, setBatchOpen] = useState(false);
-  const [relationMode, setRelationMode] = useState<RelationEditorMode>(null);
+  const [activeRelationId, setActiveRelationId] = useState<string | null>(null);
   const [importPreview, setImportPreview] = useState<ParsedImport | null>(null);
-  const [interactionMode, setInteractionMode] = useState<'pan' | 'select'>('pan');
+  const [interactionMode, setInteractionMode] = useState<'pan' | 'select'>('select');
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const openCreateRelation = useCallback((sourceId: string, targetId: string) => {
-    setRelationMode({ kind: 'create', sourceId, targetId });
-  }, []);
+    const created = addRelation({
+      sourceId,
+      targetId,
+      direction: 'positive',
+      strength: 'direct',
+    });
+    if (!created) {
+      toast('error', '建立失敗（可能已存在相同方向的關係）');
+      return;
+    }
+    toast('success', '已建立關係');
+    setActiveRelationId(created.id);
+  }, [addRelation]);
 
   const openEditRelation = useCallback((relationId: string) => {
-    setRelationMode({ kind: 'edit', relationId });
-  }, []);
+    setSelectedKpi(null);
+    setHighlightSeed(null);
+    setSettingsOpen(false);
+    setActiveRelationId(relationId);
+  }, [setSelectedKpi, setHighlightSeed]);
+
+  useEffect(() => {
+    if (selectedKpiId) {
+      setActiveRelationId(null);
+      setSettingsOpen(false);
+    }
+  }, [selectedKpiId]);
+
+  useEffect(() => {
+    const inKpiDetailPanel =
+      !settingsOpen && !activeRelationId && selectedKpiIds.length === 1;
+    if (inKpiDetailPanel) {
+      setHighlightSeed(selectedKpiIds[0]);
+    } else {
+      setHighlightSeed(null);
+    }
+  }, [settingsOpen, activeRelationId, selectedKpiIds, setHighlightSeed]);
 
   if (!hydrated) {
     return (
@@ -63,13 +101,21 @@ export default function App() {
           }}
           interactionMode={interactionMode}
           onChangeInteractionMode={setInteractionMode}
-          onImportChoice={(incoming) => setImportPreview(incoming)}
+          settingsOpen={settingsOpen}
+          onOpenSettings={() => {
+            setSettingsOpen(true);
+            setActiveRelationId(null);
+            setSelectedKpi(null);
+            setHighlightSeed(null);
+          }}
         />
         <main className="relative flex min-h-0 flex-1 gap-3 p-3">
           <section className="panel relative min-h-0 flex-1 overflow-hidden">
             <KpiCanvas
               onRequestCreateRelation={openCreateRelation}
               onEditRelation={openEditRelation}
+              onClearRelationFocus={() => setActiveRelationId(null)}
+              activeRelationId={activeRelationId}
               interactionMode={interactionMode}
               focusNodeId={focusNodeId}
               onFocusHandled={() => setFocusNodeId(null)}
@@ -77,10 +123,10 @@ export default function App() {
             {isEmpty ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <div className="pointer-events-auto panel max-w-sm p-6 text-center">
-                  <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-base font-semibold text-emerald-50">
                     開始打造你的 KPI 關係畫布
                   </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  <p className="mt-2 text-sm leading-relaxed text-emerald-200">
                     先批次新增一批指標，再拖拉兩個節點之間建立關係，最後點擊指標查看它受誰影響、又影響了誰。
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -105,11 +151,22 @@ export default function App() {
               </div>
             ) : null}
           </section>
-          <KpiInspector />
+          {settingsOpen ? (
+            <SettingsPanel
+              onClose={() => setSettingsOpen(false)}
+              onImportChoice={(incoming) => setImportPreview(incoming)}
+            />
+          ) : activeRelationId && !selectedKpiId ? (
+            <RelationEditor
+              relationId={activeRelationId}
+              onClose={() => setActiveRelationId(null)}
+            />
+          ) : (
+            <KpiInspector />
+          )}
         </main>
 
         <BatchAddDialog open={batchOpen} onClose={() => setBatchOpen(false)} />
-        <RelationEditor mode={relationMode} onClose={() => setRelationMode(null)} />
         <ImportDialog
           open={!!importPreview}
           incoming={importPreview}
@@ -123,7 +180,7 @@ export default function App() {
           }}
           onMerge={() => {
             if (!importPreview) return;
-            const merged = mergeImports({ kpis, relations }, importPreview);
+            const merged = mergeImports({ kpis, relations, colorNames }, importPreview);
             replaceAll(merged, '匯入（合併）');
             toast('success', '已合併匯入資料');
             setImportPreview(null);
@@ -140,6 +197,7 @@ export default function App() {
               kpis: local.kpis,
               relations: local.relations,
               preferences: local.preferences,
+              colorNames: local.colorNames,
             });
             toast('info', '已保留本機畫布');
           }}

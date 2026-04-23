@@ -25,6 +25,7 @@ export interface GraphSnapshot {
   version: 1;
   kpis: KPI[];
   relations: Relation[];
+  colorNames?: Record<string, string>;
   exportedAt: number;
 }
 
@@ -37,15 +38,25 @@ export const DEFAULT_PREFERENCES: Preferences = {
 };
 
 export const KPI_COLOR_PALETTE = [
-  '#22c55e',
-  '#16a34a',
-  '#0d9488',
-  '#0ea5e9',
-  '#84cc16',
-  '#eab308',
-  '#f97316',
-  '#ef4444',
-  '#06b6d4',
-  '#3b82f6',
   '#64748b',
+  '#ef4444',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#3b82f6',
+  '#4f46e5',
+  '#a855f7',
+  '#f8fafc',
 ];
+
+export const KPI_COLOR_LABELS: Record<string, string> = {
+  '#64748b': '灰',
+  '#ef4444': '紅',
+  '#f97316': '橙',
+  '#eab308': '黃',
+  '#22c55e': '綠',
+  '#3b82f6': '藍',
+  '#4f46e5': '靛',
+  '#a855f7': '紫',
+  '#f8fafc': '白',
+};

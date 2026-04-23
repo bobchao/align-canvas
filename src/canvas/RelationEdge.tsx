@@ -8,6 +8,7 @@ export interface RelationEdgeData extends Record<string, unknown> {
   note?: string;
   highlighted: boolean;
   dimmed: boolean;
+  editing: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ function RelationEdgeImpl(props: EdgeProps) {
   const direction: RelationDirection = data?.direction ?? 'positive';
   const strength: RelationStrength = data?.strength ?? 'direct';
   const highlighted = data?.highlighted ?? false;
+  const editing = data?.editing ?? false;
 
   const [path, labelX, labelY] = getBezierPath({
     sourceX,
@@ -45,7 +47,7 @@ function RelationEdgeImpl(props: EdgeProps) {
 
   const color = direction === 'positive' ? '#16a34a' : '#dc2626';
   const strokeDasharray = strength === 'indirect' ? '6 4' : undefined;
-  const strokeWidth = selected || highlighted ? 2.4 : 1.8;
+  const strokeWidth = editing ? 3.6 : selected || highlighted ? 2.4 : 1.8;
 
   return (
     <>
@@ -57,6 +59,7 @@ function RelationEdgeImpl(props: EdgeProps) {
           stroke: color,
           strokeWidth,
           strokeDasharray,
+          filter: editing ? 'drop-shadow(0 0 4px rgba(16, 185, 129, 0.65))' : undefined,
         }}
       />
       {data?.note ? (

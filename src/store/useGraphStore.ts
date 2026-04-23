@@ -21,6 +21,7 @@ interface GraphState {
   kpis: KPI[];
   relations: Relation[];
   preferences: Preferences;
+  colorNames: Record<string, string>;
 
   /** UI-only: currently highlighted seed */
   highlightSeedId: string | null;
@@ -45,6 +46,7 @@ interface GraphState {
     kpis: KPI[];
     relations: Relation[];
     preferences: Preferences;
+    colorNames?: Record<string, string>;
   }): void;
 
   setPreferences(patch: Partial<Preferences>): void;
@@ -69,12 +71,16 @@ interface GraphState {
   removeRelation(id: string): void;
 
   setHighlightSeed(id: string | null): void;
-  toggleHighlightCategory(color: string): void;
+  setHighlightCategory(color: string | null): void;
+  setColorName(color: string, name: string): void;
   setSelectedKpi(id: string | null): void;
   setSelectedKpis(ids: string[]): void;
 
   /** imperative replacement used by import */
-  replaceAll(payload: { kpis: KPI[]; relations: Relation[] }, label?: string): void;
+  replaceAll(
+    payload: { kpis: KPI[]; relations: Relation[]; colorNames?: Record<string, string> },
+    label?: string,
+  ): void;
 
   clearUrlImportConflict(): void;
   /**
@@ -158,6 +164,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
     kpis: [],
     relations: [],
     preferences: DEFAULT_PREFERENCES,
+    colorNames: {},
     highlightSeedId: null,
     highlightCategoryColor: null,
     selectedKpiId: null,
@@ -167,11 +174,12 @@ export const useGraphStore = create<GraphState>((set, get) => {
     past: [],
     future: [],
 
-    hydrate({ kpis, relations, preferences }) {
+    hydrate({ kpis, relations, preferences, colorNames = {} }) {
       set({
         kpis,
         relations,
         preferences,
+        colorNames,
         hydrated: true,
         past: [],
         future: [],
@@ -278,15 +286,22 @@ export const useGraphStore = create<GraphState>((set, get) => {
         (r) => r.sourceId === id || r.targetId === id,
       );
       const apply = () =>
-        set((s) => ({
-          kpis: s.kpis.filter((k) => k.id !== id),
-          relations: s.relations.filter((r) => r.sourceId !== id && r.targetId !== id),
-          selectedKpiId: s.selectedKpiId === id ? null : s.selectedKpiId,
-          selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
-          highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
-          highlightCategoryColor:
-            s.highlightCategoryColor === kpi.color ? null : s.highlightCategoryColor,
-        }));
+        set((s) => {
+          const nextKpis = s.kpis.filter((node) => node.id !== id);
+          const hasRemainingSameColor =
+            !!kpi.color && nextKpis.some((node) => node.color === kpi.color);
+          return {
+            kpis: nextKpis,
+            relations: s.relations.filter((r) => r.sourceId !== id && r.targetId !== id),
+            selectedKpiId: s.selectedKpiId === id ? null : s.selectedKpiId,
+            selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
+            highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
+            highlightCategoryColor:
+              s.highlightCategoryColor === kpi.color && !hasRemainingSameColor
+                ? null
+                : s.highlightCategoryColor,
+          };
+        });
       const revert = () =>
         set((s) => ({
           kpis: [...s.kpis, kpi],
@@ -380,11 +395,29 @@ export const useGraphStore = create<GraphState>((set, get) => {
       set({ highlightSeedId: id, highlightCategoryColor: null });
     },
 
-    toggleHighlightCategory(color) {
-      const curr = get().highlightCategoryColor;
+    setHighlightCategory(color) {
       set({
-        highlightCategoryColor: curr === color ? null : color,
+        highlightCategoryColor: color,
         highlightSeedId: null,
+      });
+    },
+
+    setColorName(color, name) {
+      const trimmed = name.trim();
+      set((s) => {
+        if (!trimmed) {
+          if (!(color in s.colorNames)) return s;
+          const rest = { ...s.colorNames };
+          delete rest[color];
+          return { colorNames: rest };
+        }
+        if (s.colorNames[color] === trimmed) return s;
+        return {
+          colorNames: {
+            ...s.colorNames,
+            [color]: trimmed,
+          },
+        };
       });
     },
 
@@ -437,19 +470,28 @@ export const useGraphStore = create<GraphState>((set, get) => {
       });
     },
 
-    replaceAll({ kpis, relations }, label = '匯入資料') {
-      const prev = { kpis: get().kpis, relations: get().relations };
+    replaceAll({ kpis, relations, colorNames }, label = '匯入資料') {
+      const prev = {
+        kpis: get().kpis,
+        relations: get().relations,
+        colorNames: get().colorNames,
+      };
       const apply = () =>
         set({
           kpis,
           relations,
+          colorNames: colorNames ?? {},
           selectedKpiId: null,
           selectedKpiIds: [],
           highlightSeedId: null,
           highlightCategoryColor: null,
         });
       const revert = () =>
-        set({ kpis: prev.kpis, relations: prev.relations });
+        set({
+          kpis: prev.kpis,
+          relations: prev.relations,
+          colorNames: prev.colorNames,
+        });
       apply();
       pushHistory({ label, undo: revert, redo: apply });
     },

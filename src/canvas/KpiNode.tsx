@@ -6,11 +6,12 @@ export interface KpiNodeData extends Record<string, unknown> {
   kpi: KPI;
   highlighted: boolean;
   dimmed: boolean;
+  editing: boolean;
 }
 
 function KpiNodeImpl(props: NodeProps) {
   const data = props.data as KpiNodeData;
-  const { kpi, highlighted } = data;
+  const { kpi, highlighted, editing } = data;
   const selected = props.selected;
   const color = kpi.color ?? '#22c55e';
   const handleClass =
@@ -21,7 +22,9 @@ function KpiNodeImpl(props: NodeProps) {
       className={[
         'group relative flex h-[72px] w-[200px] items-stretch overflow-hidden rounded-lg border bg-emerald-950 shadow-sm transition',
         selected
-          ? 'border-brand ring-2 ring-brand/50'
+          ? 'border-brand ring-2 ring-brand/70 shadow-[0_0_0_1px_rgba(16,185,129,0.45)]'
+          : editing
+            ? 'border-brand/85 ring-2 ring-brand/60 shadow-[0_0_16px_rgba(16,185,129,0.25)]'
           : highlighted
             ? 'border-brand/70'
             : 'border-emerald-800',
@@ -34,11 +37,11 @@ function KpiNodeImpl(props: NodeProps) {
         style={{ backgroundColor: color }}
       />
       <div className="flex min-w-0 flex-1 flex-col justify-center px-3 py-2">
-        <div className="truncate text-sm font-semibold text-emerald-100">
+        <div className="truncate text-sm font-semibold text-emerald-50">
           {kpi.name}
         </div>
         {kpi.note ? (
-          <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-emerald-300">
+          <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-emerald-200">
             {kpi.note}
           </div>
         ) : null}

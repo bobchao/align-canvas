@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, footer, widthClass }: Pr
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="text-base font-semibold text-emerald-50">
             {title}
           </h2>
           <button

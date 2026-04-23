@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal } from '../ui/Modal';
 import { useGraphStore } from '../store/useGraphStore';
 import type { Relation, RelationDirection, RelationStrength } from '../types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { toast } from '../ui/Toast';
 
-export type RelationEditorMode =
-  | { kind: 'create'; sourceId: string; targetId: string }
-  | { kind: 'edit'; relationId: string }
-  | null;
-
 interface Props {
-  mode: RelationEditorMode;
+  relationId: string | null;
   onClose: () => void;
 }
 
@@ -21,110 +15,83 @@ const DIRECTION_OPTIONS: Array<{ value: RelationDirection; label: string; desc: 
 ];
 
 const STRENGTH_OPTIONS: Array<{ value: RelationStrength; label: string; desc: string }> = [
-  { value: 'direct', label: '直接', desc: '實線：影響明確、立即' },
-  { value: 'indirect', label: '間接', desc: '虛線：經由其他因素傳遞' },
+  { value: 'direct', label: '直接', desc: '影響明確、立即' },
+  { value: 'indirect', label: '間接', desc: '經由其他因素傳遞' },
 ];
 
-export function RelationEditor({ mode, onClose }: Props) {
-  const addRelation = useGraphStore((s) => s.addRelation);
+export function RelationEditor({ relationId, onClose }: Props) {
   const updateRelation = useGraphStore((s) => s.updateRelation);
   const removeRelation = useGraphStore((s) => s.removeRelation);
   const relations = useGraphStore((s) => s.relations);
   const kpis = useGraphStore((s) => s.kpis);
 
   const editing: Relation | undefined = useMemo(() => {
-    if (mode?.kind !== 'edit') return undefined;
-    return relations.find((r) => r.id === mode.relationId);
-  }, [mode, relations]);
+    if (!relationId) return undefined;
+    return relations.find((r) => r.id === relationId);
+  }, [relationId, relations]);
 
   const [direction, setDirection] = useState<RelationDirection>('positive');
   const [strength, setStrength] = useState<RelationStrength>('direct');
   const [note, setNote] = useState('');
 
   useEffect(() => {
-    if (mode?.kind === 'edit' && editing) {
+    if (editing) {
       setDirection(editing.direction);
       setStrength(editing.strength);
       setNote(editing.note ?? '');
-    } else if (mode?.kind === 'create') {
-      setDirection('positive');
-      setStrength('direct');
-      setNote('');
     }
-  }, [mode, editing]);
+  }, [editing]);
 
-  if (!mode) return null;
+  if (!editing) return null;
 
   const sourceKpi =
-    mode.kind === 'create'
-      ? kpis.find((k) => k.id === mode.sourceId)
-      : kpis.find((k) => k.id === editing?.sourceId);
+    kpis.find((k) => k.id === editing.sourceId);
   const targetKpi =
-    mode.kind === 'create'
-      ? kpis.find((k) => k.id === mode.targetId)
-      : kpis.find((k) => k.id === editing?.targetId);
+    kpis.find((k) => k.id === editing.targetId);
 
-  const handleSubmit = () => {
-    if (mode.kind === 'create') {
-      const created = addRelation({
-        sourceId: mode.sourceId,
-        targetId: mode.targetId,
-        direction,
-        strength,
-        note: note.trim() || undefined,
-      });
-      if (!created) {
-        toast('error', '建立失敗（可能已存在相同方向的關係）');
-        return;
-      }
-      toast('success', '已建立關係');
-    } else if (mode.kind === 'edit' && editing) {
-      updateRelation(editing.id, {
-        direction,
-        strength,
-        note: note.trim() || undefined,
-      });
-      toast('success', '已更新關係');
-    }
-    onClose();
+  const setDirectionAndSave = (value: RelationDirection) => {
+    setDirection(value);
+    updateRelation(editing.id, { direction: value });
+  };
+
+  const setStrengthAndSave = (value: RelationStrength) => {
+    setStrength(value);
+    updateRelation(editing.id, { strength: value });
+  };
+
+  const commitNote = (nextNote: string) => {
+    const trimmed = nextNote.trim();
+    const normalized = trimmed || undefined;
+    if ((editing.note ?? undefined) === normalized) return;
+    updateRelation(editing.id, { note: normalized });
   };
 
   const handleDelete = () => {
-    if (mode.kind === 'edit' && editing) {
-      removeRelation(editing.id);
-      toast('success', '已刪除關係（可用 Cmd+Z 還原）');
-      onClose();
-    }
+    removeRelation(editing.id);
+    toast('success', '已刪除關係（可用 Cmd+Z 還原）');
+    onClose();
   };
 
   return (
-    <Modal
-      open={true}
-      onClose={onClose}
-      title={mode.kind === 'create' ? '建立關係' : '編輯關係'}
-      widthClass="max-w-lg"
-      footer={
-        <>
-          {mode.kind === 'edit' ? (
-            <button
-              type="button"
-              className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
-              onClick={handleDelete}
-            >
-              <Trash2 size={14} /> 刪除
-            </button>
-          ) : null}
-          <div className="flex-1" />
-          <button type="button" className="btn" onClick={onClose}>
-            取消
-          </button>
-          <button type="button" className="btn-primary" onClick={handleSubmit}>
-            {mode.kind === 'create' ? '建立' : '儲存'}
-          </button>
-        </>
-      }
-    >
-      <div className="space-y-4">
+    <aside className="panel flex w-[320px] shrink-0 flex-col overflow-hidden">
+      <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            關係詳情
+          </div>
+          <div className="truncate font-semibold text-emerald-50">編輯關係</div>
+        </div>
+        <button
+          type="button"
+          className="btn-ghost !p-1"
+          onClick={onClose}
+          aria-label="關閉"
+        >
+          <X size={16} />
+        </button>
+      </header>
+
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-800/50">
           <span className="truncate font-medium text-slate-900 dark:text-slate-100">
             {sourceKpi?.name ?? '(已刪除)'}
@@ -144,7 +111,7 @@ export function RelationEditor({ mode, onClose }: Props) {
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setDirection(opt.value)}
+                  onClick={() => setDirectionAndSave(opt.value)}
                   className={[
                     'rounded-md border px-3 py-2 text-left text-sm transition',
                     active
@@ -171,11 +138,13 @@ export function RelationEditor({ mode, onClose }: Props) {
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setStrength(opt.value)}
+                  onClick={() => setStrengthAndSave(opt.value)}
                   className={[
                     'rounded-md border px-3 py-2 text-left text-sm transition',
                     active
-                      ? 'border-brand bg-brand/10 text-brand-dark dark:text-brand-light'
+                      ? opt.value === 'direct'
+                        ? 'border-emerald-400 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-100'
+                        : 'border-sky-400 bg-sky-50 text-sky-900 dark:border-sky-500 dark:bg-sky-950/40 dark:text-sky-100'
                       : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800',
                   ].join(' ')}
                 >
@@ -192,11 +161,25 @@ export function RelationEditor({ mode, onClose }: Props) {
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onBlur={() => commitNote(note)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+            }}
             className="input"
             placeholder="例如：延遲一季、需要行銷投入等"
           />
         </div>
+
+        <div className="pt-1">
+          <button
+            type="button"
+            className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
+            onClick={handleDelete}
+          >
+            <Trash2 size={14} /> 刪除
+          </button>
+        </div>
       </div>
-    </Modal>
+    </aside>
   );
 }

@@ -30,7 +30,7 @@ export function UrlImportConfirmDialog({ open, remote, local, onCancel, onConfir
         </>
       }
     >
-      <div className="space-y-3 text-sm text-slate-700 dark:text-slate-200">
+      <div className="space-y-3 text-sm text-emerald-100">
         <p>
           遠端 JSON 含 <strong>{remote.kpis.length}</strong> 個指標與{' '}
           <strong>{remote.relations.length}</strong> 條關係。
@@ -39,8 +39,8 @@ export function UrlImportConfirmDialog({ open, remote, local, onCancel, onConfir
           本機已從 IndexedDB 讀到 {local.kpis.length} 個指標 / {local.relations.length} 條關係。
           若確定載入，將<strong>覆寫</strong>本機儲存內容（與工具列匯入的「覆蓋」相同）。
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          取消則維持本機資料，開啟原因：網址列帶有 <code className="rounded bg-slate-800/80 px-1">?import=</code>
+        <p className="text-xs text-emerald-300">
+          取消則維持本機資料，開啟原因：網址列帶有 <code className="rounded bg-emerald-900/80 px-1 text-emerald-100">?import=</code>
         </p>
       </div>
     </Modal>

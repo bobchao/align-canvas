@@ -47,6 +47,7 @@ export function usePersistence() {
                 kpis: remote.kpis,
                 relations: remote.relations,
                 preferences: persisted.preferences,
+                colorNames: remote.colorNames,
               });
             }
             removeUrlImportParamFromAddressBar();
@@ -69,9 +70,16 @@ export function usePersistence() {
 
   useEffect(() => {
     const save = debounce(() => {
-      const { kpis, relations, preferences, hydrated: h, urlImportConflict } = useGraphStore.getState();
+      const {
+        kpis,
+        relations,
+        preferences,
+        colorNames,
+        hydrated: h,
+        urlImportConflict,
+      } = useGraphStore.getState();
       if (!h || urlImportConflict) return;
-      savePersistedState({ kpis, relations, preferences }).catch((err) => {
+      savePersistedState({ kpis, relations, preferences, colorNames }).catch((err) => {
         console.error('Failed to persist to IndexedDB', err);
       });
     }, 300);
@@ -81,7 +89,8 @@ export function usePersistence() {
       if (
         state.kpis !== prev.kpis ||
         state.relations !== prev.relations ||
-        state.preferences !== prev.preferences
+        state.preferences !== prev.preferences ||
+        state.colorNames !== prev.colorNames
       ) {
         save();
       }

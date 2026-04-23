@@ -10,7 +10,8 @@ export interface HighlightResult {
  *  - the seed itself
  *  - all ancestors (anyone with a path leading into the seed)
  *  - all descendants (anyone reachable from the seed)
- * Plus every relation edge that sits on such a path (i.e. both endpoints are in the union).
+ * Plus every traversed relation edge during the two BFS passes.
+ * (This avoids highlighting unrelated "shortcut" edges between two highlighted nodes.)
  */
 export function computeHighlight(
   seedId: string,
@@ -26,6 +27,7 @@ export function computeHighlight(
   }
 
   const nodeIds = new Set<string>([seedId]);
+  const edgeIds = new Set<string>();
 
   const bfs = (start: string, nextMap: Map<string, Relation[]>, pick: (r: Relation) => string) => {
     const queue: string[] = [start];
@@ -35,6 +37,7 @@ export function computeHighlight(
       const edges = nextMap.get(curr);
       if (!edges) continue;
       for (const e of edges) {
+        edgeIds.add(e.id);
         const next = pick(e);
         if (!seen.has(next)) {
           seen.add(next);
@@ -47,13 +50,6 @@ export function computeHighlight(
 
   bfs(seedId, outgoing, (r) => r.targetId);
   bfs(seedId, incoming, (r) => r.sourceId);
-
-  const edgeIds = new Set<string>();
-  for (const r of relations) {
-    if (nodeIds.has(r.sourceId) && nodeIds.has(r.targetId)) {
-      edgeIds.add(r.id);
-    }
-  }
 
   return { nodeIds, edgeIds };
 }

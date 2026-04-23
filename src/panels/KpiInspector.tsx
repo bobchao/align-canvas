@@ -1,4 +1,4 @@
-import { Highlighter, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useGraphStore } from '../store/useGraphStore';
 import { KPI_COLOR_PALETTE } from '../types';
@@ -10,7 +10,6 @@ export function KpiInspector() {
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
   const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
-  const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
   const updateKpi = useGraphStore((s) => s.updateKpi);
@@ -49,7 +48,7 @@ export function KpiInspector() {
             <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
               多選模式
             </div>
-            <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
+            <div className="truncate font-semibold text-emerald-50">
               已選取 {selectedKpis.length} 個指標
             </div>
           </div>
@@ -80,16 +79,6 @@ export function KpiInspector() {
                 />
               ))}
             </div>
-            <button
-              type="button"
-              className="btn mt-3"
-              onClick={() => {
-                updateKpiColors(selectedKpiIds, undefined);
-                toast('success', `已清除 ${selectedKpiIds.length} 個指標分類`);
-              }}
-            >
-              清除分類顏色
-            </button>
           </div>
           <div>
             <div className="label">已選取指標</div>
@@ -127,8 +116,8 @@ export function KpiInspector() {
 
   if (!kpi) {
     return (
-      <aside className="panel w-[320px] shrink-0 p-4 text-sm text-slate-500 dark:text-slate-400">
-        <div className="font-medium text-slate-700 dark:text-slate-200">尚未選取指標</div>
+      <aside className="panel w-[320px] shrink-0 p-4 text-sm text-emerald-200">
+        <div className="font-medium text-emerald-50">尚未選取指標</div>
         <p className="mt-2 leading-relaxed">
           點擊畫布上的任一 KPI 節點來編輯內容、Highlight 相關指標或刪除該項。
         </p>
@@ -176,14 +165,6 @@ export function KpiInspector() {
     });
   };
 
-  const toggleHighlight = () => {
-    if (highlightSeedId === kpi.id) {
-      setHighlightSeed(null);
-    } else {
-      setHighlightSeed(kpi.id);
-    }
-  };
-
   const handleDelete = () => {
     removeKpi(kpi.id);
     toast('success', `已刪除 ${kpi.name}（可用 Cmd+Z 還原）`);
@@ -198,14 +179,17 @@ export function KpiInspector() {
           <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
             KPI 詳情
           </div>
-          <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
+          <div className="truncate font-semibold text-emerald-50">
             {kpi.name}
           </div>
         </div>
         <button
           type="button"
           className="btn-ghost !p-1"
-          onClick={() => setSelectedKpi(null)}
+          onClick={() => {
+            setSelectedKpi(null);
+            setHighlightSeed(null);
+          }}
           aria-label="關閉"
         >
           <X size={16} />
@@ -256,29 +240,6 @@ export function KpiInspector() {
               />
             ))}
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={[
-              'btn',
-              highlightSeedId === kpi.id
-                ? '!border-brand !bg-brand/10 !text-brand-dark dark:!text-brand-light'
-                : '',
-            ].join(' ')}
-            onClick={toggleHighlight}
-          >
-            <Highlighter size={14} />
-            {highlightSeedId === kpi.id ? '取消 Highlight' : 'Highlight'}
-          </button>
-          <button
-            type="button"
-            className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
-            onClick={handleDelete}
-          >
-            <Trash2 size={14} /> 刪除
-          </button>
         </div>
 
         <section>
@@ -344,6 +305,16 @@ export function KpiInspector() {
             </ul>
           )}
         </section>
+
+        <div className="pt-1">
+          <button
+            type="button"
+            className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
+            onClick={handleDelete}
+          >
+            <Trash2 size={14} /> 刪除
+          </button>
+        </div>
       </div>
     </aside>
   );

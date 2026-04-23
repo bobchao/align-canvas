@@ -1,10 +1,15 @@
 import type { GraphSnapshot, KPI, Relation } from '../types';
 
-export function buildSnapshot(kpis: KPI[], relations: Relation[]): GraphSnapshot {
+export function buildSnapshot(
+  kpis: KPI[],
+  relations: Relation[],
+  colorNames: Record<string, string> = {},
+): GraphSnapshot {
   return {
     version: 1,
     kpis,
     relations,
+    colorNames,
     exportedAt: Date.now(),
   };
 }
@@ -29,6 +34,7 @@ export function exportToFile(snapshot: GraphSnapshot) {
 export interface ParsedImport {
   kpis: KPI[];
   relations: Relation[];
+  colorNames: Record<string, string>;
 }
 
 export function parseSnapshot(raw: string): ParsedImport {
@@ -63,11 +69,15 @@ export function parseSnapshot(raw: string): ParsedImport {
   return {
     kpis: snapshot.kpis as KPI[],
     relations: snapshot.relations as Relation[],
+    colorNames:
+      snapshot.colorNames && typeof snapshot.colorNames === 'object'
+        ? (snapshot.colorNames as Record<string, string>)
+        : {},
   };
 }
 
 export function mergeImports(
-  existing: { kpis: KPI[]; relations: Relation[] },
+  existing: { kpis: KPI[]; relations: Relation[]; colorNames: Record<string, string> },
   incoming: ParsedImport,
 ): ParsedImport {
   const kpiMap = new Map<string, KPI>();
@@ -79,5 +89,9 @@ export function mergeImports(
   return {
     kpis: Array.from(kpiMap.values()),
     relations: Array.from(relationMap.values()),
+    colorNames: {
+      ...existing.colorNames,
+      ...incoming.colorNames,
+    },
   };
 }

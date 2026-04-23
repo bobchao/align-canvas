@@ -66,7 +66,7 @@ export function BatchAddDialog({ open, onClose }: Props) {
             className="input min-h-[220px] resize-y font-mono text-[13px]"
             autoFocus
           />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs text-emerald-300">
             空白行會自動忽略，與現有指標同名者會跳過。
           </p>
         </div>
