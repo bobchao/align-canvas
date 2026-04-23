@@ -8,6 +8,8 @@ import type {
 } from '../types';
 import { DEFAULT_PREFERENCES } from '../types';
 import { newId } from '../lib/ids';
+import type { PersistedState } from './db';
+import type { ParsedImport } from '../lib/jsonIO';
 
 interface HistoryEntry {
   label: string;
@@ -28,6 +30,10 @@ interface GraphState {
   selectedKpiIds: string[];
   /** whether persisted state has been loaded (to avoid saving an empty state) */
   hydrated: boolean;
+  /**
+   * 從 ?import= 開啟且本機 IndexedDB 已有圖資時顯示確認，此期間不可寫入 IDB，避免以空狀態覆寫。
+   */
+  urlImportConflict: { remote: ParsedImport; local: PersistedState } | null;
 
   /** history stacks (not persisted) */
   past: HistoryEntry[];
@@ -66,6 +72,15 @@ interface GraphState {
 
   /** imperative replacement used by import */
   replaceAll(payload: { kpis: KPI[]; relations: Relation[] }, label?: string): void;
+
+  clearUrlImportConflict(): void;
+  /**
+   * 有 ?import= 且本機已有圖：空畫布＋衝突旗標，直到使用者確認還原或載入遠端（此期間禁止 IDB 寫入）。
+   */
+  enterUrlImportStandbyForUrlConflict(
+    local: PersistedState,
+    remote: ParsedImport,
+  ): void;
 
   undo(): void;
   redo(): void;
@@ -144,11 +159,20 @@ export const useGraphStore = create<GraphState>((set, get) => {
     selectedKpiId: null,
     selectedKpiIds: [],
     hydrated: false,
+    urlImportConflict: null,
     past: [],
     future: [],
 
     hydrate({ kpis, relations, preferences }) {
-      set({ kpis, relations, preferences, hydrated: true, past: [], future: [] });
+      set({
+        kpis,
+        relations,
+        preferences,
+        hydrated: true,
+        past: [],
+        future: [],
+        urlImportConflict: null,
+      });
     },
 
     setPreferences(patch) {
@@ -376,6 +400,25 @@ export const useGraphStore = create<GraphState>((set, get) => {
       set({
         selectedKpiIds: unique,
         selectedKpiId: unique.length === 1 ? unique[0] : null,
+      });
+    },
+
+    clearUrlImportConflict() {
+      set({ urlImportConflict: null });
+    },
+
+    enterUrlImportStandbyForUrlConflict(local, remote) {
+      set({
+        kpis: [],
+        relations: [],
+        preferences: local.preferences,
+        urlImportConflict: { remote, local: local },
+        hydrated: true,
+        past: [],
+        future: [],
+        selectedKpiId: null,
+        selectedKpiIds: [],
+        highlightSeedId: null,
       });
     },
 

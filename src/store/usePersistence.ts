@@ -1,4 +1,13 @@
 import { useEffect, useRef } from 'react';
+import { parseSnapshot } from '../lib/jsonIO';
+import {
+  fetchTextFromRemoteUrl,
+  getUrlImportParam,
+  hasPersistedGraphData,
+  isSafeRemoteUrlForFetch,
+  removeUrlImportParamFromAddressBar,
+} from '../lib/urlImportParam';
+import { toast } from '../ui/Toast';
 import { useGraphStore } from './useGraphStore';
 import { debounce, loadPersistedState, savePersistedState } from './db';
 
@@ -15,8 +24,42 @@ export function usePersistence() {
     didHydrateRef.current = true;
     (async () => {
       try {
-        const payload = await loadPersistedState();
-        useGraphStore.getState().hydrate(payload);
+        const persisted = await loadPersistedState();
+        const importParam = getUrlImportParam();
+
+        if (importParam) {
+          if (!isSafeRemoteUrlForFetch(importParam)) {
+            toast('error', '不支援的網址，請使用 http 或 https 的 JSON 連結');
+            useGraphStore.getState().hydrate(persisted);
+            removeUrlImportParamFromAddressBar();
+            return;
+          }
+          try {
+            const raw = await fetchTextFromRemoteUrl(importParam);
+            const remote = parseSnapshot(raw);
+            const hasLocal = hasPersistedGraphData(persisted);
+            if (hasLocal) {
+              useGraphStore
+                .getState()
+                .enterUrlImportStandbyForUrlConflict(persisted, remote);
+            } else {
+              useGraphStore.getState().hydrate({
+                kpis: remote.kpis,
+                relations: remote.relations,
+                preferences: persisted.preferences,
+              });
+            }
+            removeUrlImportParamFromAddressBar();
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '無法從網址讀入 JSON';
+            console.error('URL import failed', err);
+            toast('error', msg);
+            useGraphStore.getState().hydrate(persisted);
+            removeUrlImportParamFromAddressBar();
+          }
+        } else {
+          useGraphStore.getState().hydrate(persisted);
+        }
       } catch (err) {
         console.error('Failed to load from IndexedDB', err);
         useGraphStore.setState({ hydrated: true });
@@ -26,8 +69,8 @@ export function usePersistence() {
 
   useEffect(() => {
     const save = debounce(() => {
-      const { kpis, relations, preferences, hydrated: h } = useGraphStore.getState();
-      if (!h) return;
+      const { kpis, relations, preferences, hydrated: h, urlImportConflict } = useGraphStore.getState();
+      if (!h || urlImportConflict) return;
       savePersistedState({ kpis, relations, preferences }).catch((err) => {
         console.error('Failed to persist to IndexedDB', err);
       });

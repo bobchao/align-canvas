@@ -12,6 +12,7 @@ import { useGraphStore } from './store/useGraphStore';
 import { ToastViewport, toast } from './ui/Toast';
 import { mergeImports, type ParsedImport } from './lib/jsonIO';
 import { Plus } from 'lucide-react';
+import { UrlImportConfirmDialog } from './panels/UrlImportConfirmDialog';
 
 export default function App() {
   const hydrated = usePersistence();
@@ -22,6 +23,9 @@ export default function App() {
   const replaceAll = useGraphStore((s) => s.replaceAll);
   const addKpi = useGraphStore((s) => s.addKpi);
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
+  const urlImportConflict = useGraphStore((s) => s.urlImportConflict);
+  const clearUrlImportConflict = useGraphStore((s) => s.clearUrlImportConflict);
+  const hydrate = useGraphStore((s) => s.hydrate);
 
   const [batchOpen, setBatchOpen] = useState(false);
   const [relationMode, setRelationMode] = useState<RelationEditorMode>(null);
@@ -123,6 +127,28 @@ export default function App() {
             replaceAll(merged, '匯入（合併）');
             toast('success', '已合併匯入資料');
             setImportPreview(null);
+          }}
+        />
+        <UrlImportConfirmDialog
+          open={!!urlImportConflict}
+          remote={urlImportConflict?.remote ?? null}
+          local={urlImportConflict?.local ?? null}
+          onCancel={() => {
+            if (!urlImportConflict) return;
+            const { local } = urlImportConflict;
+            hydrate({
+              kpis: local.kpis,
+              relations: local.relations,
+              preferences: local.preferences,
+            });
+            toast('info', '已保留本機畫布');
+          }}
+          onConfirm={() => {
+            if (!urlImportConflict) return;
+            const { remote } = urlImportConflict;
+            replaceAll(remote, '從網址匯入');
+            clearUrlImportConflict();
+            toast('success', '已從網址匯入並寫入本機');
           }}
         />
 
