@@ -85,7 +85,7 @@ export function Toolbar({
 
   return (
     <header className="flex shrink-0 items-center gap-1.5 border-b border-emerald-900 bg-emerald-950/90 px-3 py-2 backdrop-blur">
-      <div className="flex items-center gap-1.5 pr-2 font-semibold text-emerald-100">
+      <div className="flex items-center gap-1.5 pr-2 font-semibold text-emerald-100 whitespace-nowrap">
         <LayoutDashboard size={16} className="text-emerald-400" />
         <span>Align Canvas</span>
       </div>
@@ -101,11 +101,13 @@ export function Toolbar({
       >
         <Plus size={15} />
       </button>
-      <button type="button" className="btn" onClick={onBatchAdd} title="批次新增">
-        <ListPlus size={14} /> 批次
+      <button type="button" className="btn whitespace-nowrap" onClick={onBatchAdd} title="批次新增" aria-label="批次新增">
+        <ListPlus size={14} />
+        <span className="hidden lg:inline whitespace-nowrap">批次</span>
       </button>
-      <button type="button" className="btn" onClick={handleRelayout} title="重新排版">
-        <LayoutDashboard size={14} /> 重新排版
+      <button type="button" className="btn whitespace-nowrap" onClick={handleRelayout} title="重新排版" aria-label="重新排版">
+        <LayoutDashboard size={14} />
+        <span className="hidden lg:inline whitespace-nowrap">重新排版</span>
       </button>
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
@@ -163,7 +165,6 @@ export function Toolbar({
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
       <div className="flex items-center gap-1">
-        <span className="text-xs text-emerald-300">分類突顯</span>
         <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1.5 py-1">
           {KPI_COLOR_PALETTE.map((c) => {
             const active = highlightCategoryColor === c;
@@ -186,8 +187,7 @@ export function Toolbar({
       </div>
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
-      <label className="flex items-center gap-1.5 text-xs text-emerald-200">
-        <span>排版方向</span>
+      <label className="flex items-center gap-1.5 text-xs text-emerald-200 whitespace-nowrap">
         <select
           className="input !w-auto !py-1 !pr-7 text-xs"
           value={preferences.layoutDirection}
