@@ -48,6 +48,7 @@ export function KpiCanvas({
   const relations = useGraphStore((s) => s.relations);
   const preferences = useGraphStore((s) => s.preferences);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
+  const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
@@ -61,6 +62,7 @@ export function KpiCanvas({
   const prevNodeCountRef = useRef(0);
   const connectStartRef = useRef<{ nodeId: string | null }>({ nodeId: null });
   const lastFocusedRef = useRef<string | null>(null);
+  const lastCategoryFocusRef = useRef<string | null>(null);
 
   // Ensure all KPIs have positions (auto-layout for newly added ones).
   useEffect(() => {
@@ -108,10 +110,34 @@ export function KpiCanvas({
     return () => clearTimeout(timer);
   }, [focusNodeId, onFocusHandled, rf, kpis.length]);
 
+  useEffect(() => {
+    if (!highlightCategoryColor) {
+      lastCategoryFocusRef.current = null;
+      return;
+    }
+    if (lastCategoryFocusRef.current === highlightCategoryColor) return;
+    lastCategoryFocusRef.current = highlightCategoryColor;
+    const timer = setTimeout(() => {
+      rf.fitView({ padding: 0.2, duration: 300 });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [highlightCategoryColor, rf]);
+
   const highlight = useMemo(() => {
+    if (highlightCategoryColor) {
+      const nodeIds = new Set(
+        kpis.filter((k) => k.color === highlightCategoryColor).map((k) => k.id),
+      );
+      const edgeIds = new Set(
+        relations
+          .filter((r) => nodeIds.has(r.sourceId) && nodeIds.has(r.targetId))
+          .map((r) => r.id),
+      );
+      return { nodeIds, edgeIds };
+    }
     if (!highlightSeedId) return null;
     return computeHighlight(highlightSeedId, relations);
-  }, [highlightSeedId, relations]);
+  }, [highlightCategoryColor, highlightSeedId, kpis, relations]);
 
   const nodes = useMemo<Node<KpiNodeData>[]>(() => {
     return kpis.map((k: KPI) => {

@@ -24,6 +24,8 @@ interface GraphState {
 
   /** UI-only: currently highlighted seed */
   highlightSeedId: string | null;
+  /** UI-only: currently highlighted category color */
+  highlightCategoryColor: string | null;
   /** UI-only: inspector selection */
   selectedKpiId: string | null;
   /** UI-only: current multi-selection (box select / shift select) */
@@ -67,6 +69,7 @@ interface GraphState {
   removeRelation(id: string): void;
 
   setHighlightSeed(id: string | null): void;
+  toggleHighlightCategory(color: string): void;
   setSelectedKpi(id: string | null): void;
   setSelectedKpis(ids: string[]): void;
 
@@ -156,6 +159,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
     relations: [],
     preferences: DEFAULT_PREFERENCES,
     highlightSeedId: null,
+    highlightCategoryColor: null,
     selectedKpiId: null,
     selectedKpiIds: [],
     hydrated: false,
@@ -280,6 +284,8 @@ export const useGraphStore = create<GraphState>((set, get) => {
           selectedKpiId: s.selectedKpiId === id ? null : s.selectedKpiId,
           selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
           highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
+          highlightCategoryColor:
+            s.highlightCategoryColor === kpi.color ? null : s.highlightCategoryColor,
         }));
       const revert = () =>
         set((s) => ({
@@ -371,7 +377,15 @@ export const useGraphStore = create<GraphState>((set, get) => {
     },
 
     setHighlightSeed(id) {
-      set({ highlightSeedId: id });
+      set({ highlightSeedId: id, highlightCategoryColor: null });
+    },
+
+    toggleHighlightCategory(color) {
+      const curr = get().highlightCategoryColor;
+      set({
+        highlightCategoryColor: curr === color ? null : color,
+        highlightSeedId: null,
+      });
     },
 
     setSelectedKpi(id) {
@@ -419,6 +433,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
         selectedKpiId: null,
         selectedKpiIds: [],
         highlightSeedId: null,
+        highlightCategoryColor: null,
       });
     },
 
@@ -431,6 +446,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
           selectedKpiId: null,
           selectedKpiIds: [],
           highlightSeedId: null,
+          highlightCategoryColor: null,
         });
       const revert = () =>
         set({ kpis: prev.kpis, relations: prev.relations });

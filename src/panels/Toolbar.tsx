@@ -14,6 +14,7 @@ import { useGraphStore } from '../store/useGraphStore';
 import { buildSnapshot, exportToFile, parseSnapshot } from '../lib/jsonIO';
 import { toast } from '../ui/Toast';
 import { computeLayout } from '../canvas/layout';
+import { KPI_COLOR_PALETTE } from '../types';
 
 interface Props {
   onBatchAdd: () => void;
@@ -42,6 +43,8 @@ export function Toolbar({
   const canRedo = useGraphStore((s) => s.future.length > 0);
   const commitPositions = useGraphStore((s) => s.commitPositions);
   const updateKpiPosition = useGraphStore((s) => s.updateKpiPosition);
+  const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
+  const toggleHighlightCategory = useGraphStore((s) => s.toggleHighlightCategory);
 
   const handleExport = () => {
     if (kpis.length === 0) {
@@ -156,6 +159,30 @@ export function Toolbar({
         >
           <MousePointer2 size={14} />
         </button>
+      </div>
+
+      <div className="mx-1 h-5 w-px bg-emerald-800" />
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-emerald-300">分類突顯</span>
+        <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1.5 py-1">
+          {KPI_COLOR_PALETTE.map((c) => {
+            const active = highlightCategoryColor === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggleHighlightCategory(c)}
+                className={[
+                  'h-4 w-4 rounded-full border-2 transition',
+                  active ? 'border-emerald-50 scale-110' : 'border-transparent opacity-80',
+                ].join(' ')}
+                style={{ backgroundColor: c }}
+                title={active ? '點擊取消突顯' : '突顯此分類'}
+                aria-label={active ? `取消突顯分類 ${c}` : `突顯分類 ${c}`}
+              />
+            );
+          })}
+        </div>
       </div>
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
