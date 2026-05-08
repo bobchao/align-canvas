@@ -47,12 +47,20 @@ export function useShortcuts() {
         if (inEditable) return;
 
         const {
+          activeRelationId,
           selectedKpiIds,
           selectedKpiId,
           relations,
           removeKpi,
+          removeRelation,
           setSelectedKpis,
         } = useGraphStore.getState();
+
+        if (activeRelationId) {
+          e.preventDefault();
+          removeRelation(activeRelationId);
+          return;
+        }
 
         const ids =
           selectedKpiIds.length > 0

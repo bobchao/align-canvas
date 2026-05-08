@@ -32,6 +32,8 @@ interface GraphState {
   selectedKpiId: string | null;
   /** UI-only: current multi-selection (box select / shift select) */
   selectedKpiIds: string[];
+  /** UI-only: relation edge selected in canvas (opens RelationEditor) */
+  activeRelationId: string | null;
   /** whether persisted state has been loaded (to avoid saving an empty state) */
   hydrated: boolean;
   /**
@@ -79,6 +81,7 @@ interface GraphState {
   setColorName(color: string, name: string): void;
   setSelectedKpi(id: string | null): void;
   setSelectedKpis(ids: string[]): void;
+  setActiveRelationId(id: string | null): void;
 
   /** imperative replacement used by import */
   replaceAll(
@@ -173,6 +176,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
     highlightCategoryColor: null,
     selectedKpiId: null,
     selectedKpiIds: [],
+    activeRelationId: null,
     hydrated: false,
     urlImportConflict: null,
     past: [],
@@ -188,6 +192,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
         past: [],
         future: [],
         urlImportConflict: null,
+        activeRelationId: null,
       });
     },
 
@@ -306,6 +311,10 @@ export const useGraphStore = create<GraphState>((set, get) => {
             selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
             highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
             highlightCategoryColor: hi != null && !stillHasHighlighted ? null : s.highlightCategoryColor,
+            activeRelationId:
+              affectedRelations.some((r) => r.id === s.activeRelationId)
+                ? null
+                : s.activeRelationId,
           };
         });
       const revert = () =>
@@ -410,9 +419,17 @@ export const useGraphStore = create<GraphState>((set, get) => {
     removeRelation(id) {
       const prev = get().relations.find((r) => r.id === id);
       if (!prev) return;
+      const hadActiveSelection = get().activeRelationId === id;
       const apply = () =>
-        set((s) => ({ relations: s.relations.filter((r) => r.id !== id) }));
-      const revert = () => set((s) => ({ relations: [...s.relations, prev] }));
+        set((s) => ({
+          relations: s.relations.filter((r) => r.id !== id),
+          activeRelationId: s.activeRelationId === id ? null : s.activeRelationId,
+        }));
+      const revert = () =>
+        set((s) => ({
+          relations: [...s.relations, prev],
+          activeRelationId: hadActiveSelection ? id : s.activeRelationId,
+        }));
       apply();
       pushHistory({ label: '刪除關係', undo: revert, redo: apply });
     },
@@ -453,11 +470,16 @@ export const useGraphStore = create<GraphState>((set, get) => {
       if (
         prev.selectedKpiId === id &&
         prev.selectedKpiIds.length === nextIds.length &&
-        prev.selectedKpiIds.every((x, idx) => x === nextIds[idx])
+        prev.selectedKpiIds.every((x, idx) => x === nextIds[idx]) &&
+        (id ? prev.activeRelationId === null : true)
       ) {
         return;
       }
-      set({ selectedKpiId: id, selectedKpiIds: nextIds });
+      set({
+        selectedKpiId: id,
+        selectedKpiIds: nextIds,
+        ...(id ? { activeRelationId: null as string | null } : {}),
+      });
     },
 
     setSelectedKpis(ids) {
@@ -466,14 +488,21 @@ export const useGraphStore = create<GraphState>((set, get) => {
       if (
         prev.selectedKpiIds.length === unique.length &&
         prev.selectedKpiIds.every((x, idx) => x === unique[idx]) &&
-        prev.selectedKpiId === (unique.length === 1 ? unique[0] : null)
+        prev.selectedKpiId === (unique.length === 1 ? unique[0] : null) &&
+        (unique.length > 0 ? prev.activeRelationId === null : true)
       ) {
         return;
       }
       set({
         selectedKpiIds: unique,
         selectedKpiId: unique.length === 1 ? unique[0] : null,
+        ...(unique.length > 0 ? { activeRelationId: null as string | null } : {}),
       });
+    },
+
+    setActiveRelationId(id) {
+      if (get().activeRelationId === id) return;
+      set({ activeRelationId: id });
     },
 
     clearUrlImportConflict() {
@@ -493,6 +522,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
         selectedKpiIds: [],
         highlightSeedId: null,
         highlightCategoryColor: null,
+        activeRelationId: null,
       });
     },
 
@@ -511,6 +541,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
           selectedKpiIds: [],
           highlightSeedId: null,
           highlightCategoryColor: null,
+          activeRelationId: null,
         });
       const revert = () =>
         set({
