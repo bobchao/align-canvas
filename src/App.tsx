@@ -29,12 +29,13 @@ export default function App() {
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
+  const activeRelationId = useGraphStore((s) => s.activeRelationId);
+  const setActiveRelationId = useGraphStore((s) => s.setActiveRelationId);
   const urlImportConflict = useGraphStore((s) => s.urlImportConflict);
   const clearUrlImportConflict = useGraphStore((s) => s.clearUrlImportConflict);
   const hydrate = useGraphStore((s) => s.hydrate);
 
   const [batchOpen, setBatchOpen] = useState(false);
-  const [activeRelationId, setActiveRelationId] = useState<string | null>(null);
   const [importPreview, setImportPreview] = useState<ParsedImport | null>(null);
   const [interactionMode, setInteractionMode] = useState<'pan' | 'select'>('select');
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
@@ -52,22 +53,29 @@ export default function App() {
       return;
     }
     toast('success', '已建立關係');
+    setSelectedKpi(null);
+    setHighlightSeed(null);
+    setSettingsOpen(false);
     setActiveRelationId(created.id);
-  }, [addRelation]);
+  }, [addRelation, setActiveRelationId, setHighlightSeed, setSelectedKpi]);
 
   const openEditRelation = useCallback((relationId: string) => {
     setSelectedKpi(null);
     setHighlightSeed(null);
     setSettingsOpen(false);
     setActiveRelationId(relationId);
-  }, [setSelectedKpi, setHighlightSeed]);
+  }, [setSelectedKpi, setHighlightSeed, setActiveRelationId]);
 
   useEffect(() => {
-    if (selectedKpiId) {
-      setActiveRelationId(null);
-      setSettingsOpen(false);
-    }
-  }, [selectedKpiId]);
+    return useGraphStore.subscribe((state, prev) => {
+      if (
+        state.selectedKpiId &&
+        state.selectedKpiId !== prev.selectedKpiId
+      ) {
+        setSettingsOpen(false);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const inKpiDetailPanel =
