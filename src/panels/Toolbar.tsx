@@ -70,7 +70,10 @@ export function Toolbar({
     if (kpis.length === 0) return;
     const before: Record<string, { x: number; y: number } | undefined> = {};
     for (const k of kpis) before[k.id] = k.position ? { ...k.position } : undefined;
-    const positions = computeLayout(kpis, relations, preferences.layoutDirection);
+    const positions = computeLayout(kpis, relations, {
+      direction: preferences.layoutDirection,
+      spacingPreset: preferences.layoutSpacingPreset,
+    });
     for (const p of positions) {
       updateKpiPosition(p.id, { x: p.x, y: p.y });
     }

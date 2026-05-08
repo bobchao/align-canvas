@@ -36,12 +36,16 @@ export interface GraphSnapshot {
 
 export interface Preferences {
   layoutDirection: 'LR' | 'TB';
+  layoutSpacingPreset: 'compact' | 'comfortable' | 'wide';
+  edgeRoutingMode: 'bezier' | 'smoothstep' | 'step';
   /** 在節點上顯示所屬分類名稱（主優先、其餘依 palette 順序） */
   showKpiCategoryLabels: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
   layoutDirection: 'LR',
+  layoutSpacingPreset: 'comfortable',
+  edgeRoutingMode: 'smoothstep',
   showKpiCategoryLabels: false,
 };
 

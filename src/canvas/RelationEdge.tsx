@@ -1,4 +1,10 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react';
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  getSmoothStepPath,
+  type EdgeProps,
+} from '@xyflow/react';
 import { memo } from 'react';
 import type { RelationDirection, RelationStrength } from '../types';
 
@@ -6,6 +12,8 @@ export interface RelationEdgeData extends Record<string, unknown> {
   direction: RelationDirection;
   strength: RelationStrength;
   note?: string;
+  routingMode?: 'bezier' | 'smoothstep' | 'step';
+  laneOffset?: number;
   highlighted: boolean;
   dimmed: boolean;
   editing: boolean;
@@ -33,17 +41,33 @@ function RelationEdgeImpl(props: EdgeProps) {
   const data = props.data as RelationEdgeData | undefined;
   const direction: RelationDirection = data?.direction ?? 'positive';
   const strength: RelationStrength = data?.strength ?? 'direct';
+  const routingMode = data?.routingMode ?? 'smoothstep';
+  const laneOffset = data?.laneOffset ?? 0;
   const highlighted = data?.highlighted ?? false;
   const editing = data?.editing ?? false;
 
-  const [path, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-  });
+  const [path, labelX, labelY] =
+    routingMode === 'bezier'
+      ? getBezierPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+          sourcePosition,
+          targetPosition,
+        })
+      : getSmoothStepPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+          sourcePosition,
+          targetPosition,
+          borderRadius: routingMode === 'step' ? 0 : 16,
+          offset: Math.max(16, 24 + Math.abs(laneOffset)),
+          centerX: (sourceX + targetX) / 2 + laneOffset,
+          centerY: (sourceY + targetY) / 2 + laneOffset * 0.25,
+        });
 
   const color = direction === 'positive' ? '#16a34a' : '#dc2626';
   const strokeDasharray = strength === 'indirect' ? '6 4' : undefined;

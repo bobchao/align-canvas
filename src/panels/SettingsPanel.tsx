@@ -119,6 +119,40 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
         </section>
 
         <section>
+          <div className="label">排版間距</div>
+          <select
+            className="input"
+            value={preferences.layoutSpacingPreset}
+            onChange={(e) =>
+              setPreferences({
+                layoutSpacingPreset: e.target.value as 'compact' | 'comfortable' | 'wide',
+              })
+            }
+          >
+            <option value="compact">緊湊（較省空間）</option>
+            <option value="comfortable">舒適（預設）</option>
+            <option value="wide">寬鬆（較高可讀性）</option>
+          </select>
+        </section>
+
+        <section>
+          <div className="label">線條路徑</div>
+          <select
+            className="input"
+            value={preferences.edgeRoutingMode}
+            onChange={(e) =>
+              setPreferences({
+                edgeRoutingMode: e.target.value as 'bezier' | 'smoothstep' | 'step',
+              })
+            }
+          >
+            <option value="smoothstep">Smooth Step（預設）</option>
+            <option value="step">Step（直角）</option>
+            <option value="bezier">Bezier（曲線）</option>
+          </select>
+        </section>
+
+        <section>
           <div className="label">分類命名</div>
           <div className="space-y-2">
             {KPI_COLOR_PALETTE.map((c) => (

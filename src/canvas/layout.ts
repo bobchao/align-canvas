@@ -6,6 +6,12 @@ export type LayoutDirection = 'LR' | 'TB';
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 72;
 
+const LAYOUT_SPACING_PRESETS = {
+  compact: { nodesep: 64, ranksep: 116 },
+  comfortable: { nodesep: 92, ranksep: 152 },
+  wide: { nodesep: 128, ranksep: 196 },
+} as const;
+
 export interface LayoutedPosition {
   id: string;
   x: number;
@@ -19,11 +25,23 @@ export interface LayoutedPosition {
 export function computeLayout(
   kpis: KPI[],
   relations: Relation[],
-  direction: LayoutDirection = 'LR',
+  options?: {
+    direction?: LayoutDirection;
+    spacingPreset?: keyof typeof LAYOUT_SPACING_PRESETS;
+  },
 ): LayoutedPosition[] {
+  const direction = options?.direction ?? 'LR';
+  const spacingPreset = options?.spacingPreset ?? 'comfortable';
+  const spacing = LAYOUT_SPACING_PRESETS[spacingPreset];
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: direction, nodesep: 48, ranksep: 96, marginx: 24, marginy: 24 });
+  g.setGraph({
+    rankdir: direction,
+    nodesep: spacing.nodesep,
+    ranksep: spacing.ranksep,
+    marginx: 36,
+    marginy: 36,
+  });
 
   for (const k of kpis) {
     g.setNode(k.id, { width: NODE_WIDTH, height: NODE_HEIGHT });

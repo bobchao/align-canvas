@@ -75,7 +75,10 @@ export function KpiCanvas({
   useEffect(() => {
     const missing = kpis.filter((k) => !k.position);
     if (missing.length === 0) return;
-    const positions = computeLayout(kpis, relations, preferences.layoutDirection);
+    const positions = computeLayout(kpis, relations, {
+      direction: preferences.layoutDirection,
+      spacingPreset: preferences.layoutSpacingPreset,
+    });
     for (const p of positions) {
       const k = kpis.find((x) => x.id === p.id);
       if (!k) continue;
@@ -83,7 +86,13 @@ export function KpiCanvas({
         updateKpiPosition(k.id, { x: p.x, y: p.y });
       }
     }
-  }, [kpis, relations, preferences.layoutDirection, updateKpiPosition]);
+  }, [
+    kpis,
+    relations,
+    preferences.layoutDirection,
+    preferences.layoutSpacingPreset,
+    updateKpiPosition,
+  ]);
 
   // Auto fit only for the initial graph load (first hydrate),
   // so it won't override the "focus newly added node" behavior.
@@ -173,6 +182,7 @@ export function KpiCanvas({
     const positionMap = new Map(
       kpis.map((k) => [k.id, k.position ?? { x: 0, y: 0 }] as const),
     );
+    const laneCounter = new Map<string, number>();
 
     const pickHandles = (sourceId: string, targetId: string) => {
       const source = positionMap.get(sourceId);
@@ -198,6 +208,10 @@ export function KpiCanvas({
       const dimmed = highlight ? !highlighted : false;
       const color = r.direction === 'positive' ? '#16a34a' : '#dc2626';
       const { sourceHandle, targetHandle } = pickHandles(r.sourceId, r.targetId);
+      const laneKey = `${r.sourceId}:${sourceHandle}->${r.targetId}:${targetHandle}`;
+      const lane = laneCounter.get(laneKey) ?? 0;
+      laneCounter.set(laneKey, lane + 1);
+      const laneOffset = (Math.floor(lane / 2) + 1) * 14 * (lane % 2 === 0 ? 1 : -1);
       return {
         id: r.id,
         source: r.sourceId,
@@ -205,10 +219,13 @@ export function KpiCanvas({
         sourceHandle,
         targetHandle,
         type: 'relation',
+        zIndex: 6,
         data: {
           direction: r.direction,
           strength: r.strength,
           note: r.note,
+          routingMode: preferences.edgeRoutingMode,
+          laneOffset,
           highlighted,
           dimmed,
           editing: activeRelationId === r.id,
@@ -225,7 +242,7 @@ export function KpiCanvas({
         },
       };
     });
-  }, [relations, highlight, kpis, activeRelationId]);
+  }, [relations, highlight, kpis, activeRelationId, preferences.edgeRoutingMode]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
