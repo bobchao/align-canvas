@@ -22,6 +22,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useGraphStore } from '../store/useGraphStore';
 import { computeHighlight } from '../lib/highlight';
+import { computeSearchHits } from '../lib/search';
 import { kpiHasCategoryColor } from '../lib/kpiCategory';
 import type { KPI, Relation } from '../types';
 import { computeLayout } from './layout';
@@ -55,6 +56,8 @@ export function KpiCanvas({
   const preferences = useGraphStore((s) => s.preferences);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
   const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
+  const searchOpen = useGraphStore((s) => s.searchOpen);
+  const searchQuery = useGraphStore((s) => s.searchQuery);
   const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
@@ -140,6 +143,10 @@ export function KpiCanvas({
   }, [highlightCategoryColor, rf]);
 
   const highlight = useMemo(() => {
+    if (searchOpen && searchQuery.trim()) {
+      const hits = computeSearchHits(searchQuery, kpis, relations);
+      return { nodeIds: hits.nodeIds, edgeIds: hits.edgeIds };
+    }
     if (highlightCategoryColor) {
       const nodeIds = new Set(
         kpis
@@ -155,7 +162,7 @@ export function KpiCanvas({
     }
     if (!highlightSeedId) return null;
     return computeHighlight(highlightSeedId, relations);
-  }, [highlightCategoryColor, highlightSeedId, kpis, relations]);
+  }, [searchOpen, searchQuery, highlightCategoryColor, highlightSeedId, kpis, relations]);
 
   const nodes = useMemo<Node<KpiNodeData>[]>(() => {
     return kpis.map((k: KPI) => {

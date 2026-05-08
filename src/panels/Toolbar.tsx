@@ -3,6 +3,7 @@ import {
   FileOutput,
   ChevronDown,
   MousePointer2,
+  Search,
   Settings2,
   LayoutDashboard,
   ListPlus,
@@ -50,6 +51,7 @@ export function Toolbar({
   const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
   const setHighlightCategory = useGraphStore((s) => s.setHighlightCategory);
   const colorNames = useGraphStore((s) => s.colorNames);
+  const openSearch = useGraphStore((s) => s.openSearch);
 
   const handleExport = () => {
     if (kpis.length === 0) {
@@ -167,6 +169,16 @@ export function Toolbar({
       </button>
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
+
+      <button
+        type="button"
+        className="btn !px-2"
+        onClick={openSearch}
+        title="搜尋 (Cmd/Ctrl+F)"
+        aria-label="搜尋"
+      >
+        <Search size={15} />
+      </button>
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
       <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1 py-1">

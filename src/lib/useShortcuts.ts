@@ -6,7 +6,8 @@ import { useGraphStore } from '../store/useGraphStore';
  *  - Cmd/Ctrl+Z       -> undo
  *  - Cmd/Ctrl+Shift+Z -> redo
  *  - Cmd/Ctrl+Y       -> redo (Windows alt)
- *  - Escape           -> clear highlight / selection
+ *  - Cmd/Ctrl+F       -> open canvas search
+ *  - Escape           -> close search if open, otherwise clear highlight / selection
  */
 export function useShortcuts() {
   useEffect(() => {
@@ -36,10 +37,21 @@ export function useShortcuts() {
         useGraphStore.getState().redo();
         return;
       }
+      if (meta && (e.key === 'f' || e.key === 'F')) {
+        if (inEditable) return;
+        e.preventDefault();
+        useGraphStore.getState().openSearch();
+        return;
+      }
       if (e.key === 'Escape') {
-        useGraphStore.getState().setHighlightSeed(null);
-        useGraphStore.getState().setSelectedKpi(null);
-        useGraphStore.getState().setSelectedKpis([]);
+        const state = useGraphStore.getState();
+        if (state.searchOpen) {
+          state.closeSearch();
+          return;
+        }
+        state.setHighlightSeed(null);
+        state.setSelectedKpi(null);
+        state.setSelectedKpis([]);
         return;
       }
 

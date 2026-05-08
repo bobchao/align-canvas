@@ -5,6 +5,7 @@ import { BatchAddDialog } from './panels/BatchAddDialog';
 import { ImportDialog } from './panels/ImportDialog';
 import { KpiInspector } from './panels/KpiInspector';
 import { RelationEditor } from './panels/RelationEditor';
+import { SearchBar } from './panels/SearchBar';
 import { SettingsPanel } from './panels/SettingsPanel';
 import { Toolbar } from './panels/Toolbar';
 import { useShortcuts } from './lib/useShortcuts';
@@ -34,6 +35,7 @@ export default function App() {
   const urlImportConflict = useGraphStore((s) => s.urlImportConflict);
   const clearUrlImportConflict = useGraphStore((s) => s.clearUrlImportConflict);
   const hydrate = useGraphStore((s) => s.hydrate);
+  const searchOpen = useGraphStore((s) => s.searchOpen);
 
   const [batchOpen, setBatchOpen] = useState(false);
   const [importPreview, setImportPreview] = useState<ParsedImport | null>(null);
@@ -128,6 +130,7 @@ export default function App() {
               focusNodeId={focusNodeId}
               onFocusHandled={() => setFocusNodeId(null)}
             />
+            {searchOpen ? <SearchBar /> : null}
             {isEmpty ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <div className="pointer-events-auto panel max-w-sm p-6 text-center">

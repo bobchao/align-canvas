@@ -34,6 +34,10 @@ interface GraphState {
   selectedKpiIds: string[];
   /** UI-only: relation edge selected in canvas (opens RelationEditor) */
   activeRelationId: string | null;
+  /** UI-only: whether the search bar is shown */
+  searchOpen: boolean;
+  /** UI-only: current search query string (empty = no search highlight) */
+  searchQuery: string;
   /** whether persisted state has been loaded (to avoid saving an empty state) */
   hydrated: boolean;
   /**
@@ -82,6 +86,10 @@ interface GraphState {
   setSelectedKpi(id: string | null): void;
   setSelectedKpis(ids: string[]): void;
   setActiveRelationId(id: string | null): void;
+
+  openSearch(): void;
+  closeSearch(): void;
+  setSearchQuery(query: string): void;
 
   /** imperative replacement used by import */
   replaceAll(
@@ -177,6 +185,8 @@ export const useGraphStore = create<GraphState>((set, get) => {
     selectedKpiId: null,
     selectedKpiIds: [],
     activeRelationId: null,
+    searchOpen: false,
+    searchQuery: '',
     hydrated: false,
     urlImportConflict: null,
     past: [],
@@ -503,6 +513,18 @@ export const useGraphStore = create<GraphState>((set, get) => {
     setActiveRelationId(id) {
       if (get().activeRelationId === id) return;
       set({ activeRelationId: id });
+    },
+
+    openSearch() {
+      set({ searchOpen: true });
+    },
+
+    closeSearch() {
+      set({ searchOpen: false, searchQuery: '' });
+    },
+
+    setSearchQuery(query) {
+      set({ searchQuery: query });
     },
 
     clearUrlImportConflict() {

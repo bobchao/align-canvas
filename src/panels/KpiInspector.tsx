@@ -129,6 +129,9 @@ export function KpiInspector() {
           <div className="font-semibold text-slate-700 dark:text-slate-200">快捷鍵</div>
           <ul className="mt-2 space-y-1">
             <li>
+              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">F</kbd> 搜尋節點與附註
+            </li>
+            <li>
               <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">Z</kbd> 復原
             </li>
             <li>
@@ -136,7 +139,7 @@ export function KpiInspector() {
               <kbd className="kbd">Z</kbd> 重做
             </li>
             <li>
-              <kbd className="kbd">Esc</kbd> 取消 Highlight
+              <kbd className="kbd">Esc</kbd> 關閉搜尋／取消 Highlight
             </li>
           </ul>
         </div>
