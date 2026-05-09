@@ -63,7 +63,8 @@
       "exported": "Exported JSON",
       "relayout": "Layout refreshed"
     },
-    "metricPerspectiveBadge": "Perspective: {{name}}"
+    "metricPerspectiveNeutral": "Neutral (no perspective)",
+    "metricPerspectiveSelectTitle": "Switch perspective"
   },
   "inspector": {
     "noSelection": "No indicator selected",
@@ -195,12 +196,9 @@
       "interface": "Interface"
     },
     "perspectiveSectionTitle": "Team perspective",
-    "activePerspectiveSelect": "Active perspective",
-    "neutralPerspective": "Neutral (hide & lock Input/Output markings)",
-    "perspectiveEditingHint": "You're viewing and editing markings for the perspective selected above. Switch perspective to see another team's labels.",
-    "perspectiveNeutralWhenEmpty": "Add at least one perspective below, then choose it here.",
+    "perspectiveSectionIntro": "Different teams view the same canvas differently — what one team owns as a Controllable Input may be another team's Output. A perspective lets each team mark indicator roles from its own viewpoint without overriding others.",
     "perspectiveDefinitions": "Perspective list (add, rename, or remove)",
-    "newPerspectivePlaceholder": "e.g. Growth, Fleet, BD…",
+    "newPerspectivePlaceholder": "e.g. MKT, FIN…",
     "addPerspective": "Add perspective",
     "noPerspectivesYet": "No perspectives yet. Add one to enable role markings on the canvas.",
     "perspectiveOnboardingToast": "Perspective mode on: Input/Output edits apply only to the perspective you chose. Switch perspective to edit another.",

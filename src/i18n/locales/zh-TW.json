@@ -63,7 +63,8 @@
       "exported": "已匯出 JSON",
       "relayout": "已重新排版"
     },
-    "metricPerspectiveBadge": "視角：{{name}}"
+    "metricPerspectiveNeutral": "無特別視角",
+    "metricPerspectiveSelectTitle": "切換視角"
   },
   "inspector": {
     "noSelection": "尚未選取指標",
@@ -195,12 +196,9 @@
       "interface": "介面"
     },
     "perspectiveSectionTitle": "部門／視角",
-    "activePerspectiveSelect": "目前使用的視角",
-    "neutralPerspective": "不偏不倚（不顯示或編輯標記）",
-    "perspectiveEditingHint": "您正在檢視與編輯目前視角專屬的標記；切換視角後，畫面會顯示該視角的結果。",
-    "perspectiveNeutralWhenEmpty": "尚未建立任何視角。請先在下方新增視角，再在這裡選定。",
+    "perspectiveSectionIntro": "同一份 Canvas 上，不同部門對「自己可以施力的 Controllable Input」與「結果型的 Output」會有不同判定。視角讓每個部門以自己的角度標記每個指標的角色，彼此獨立保存、互不覆蓋。",
     "perspectiveDefinitions": "視角清單（可新增、重新命名或刪除）",
-    "newPerspectivePlaceholder": "例如：Growth、Fleet、BD…",
+    "newPerspectivePlaceholder": "例如：MKT、FIN…",
     "addPerspective": "新增視角",
     "noPerspectivesYet": "尚無視角。新增後即可在工具列看到目前狀態，並於畫布標記指標。",
     "perspectiveOnboardingToast": "已啟用視角標記：接下來的 Input/Output 只會套用到您剛選定的視角；其他視角需切換後另行編輯。",

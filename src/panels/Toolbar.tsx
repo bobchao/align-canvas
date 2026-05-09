@@ -54,8 +54,23 @@ export function Toolbar({
   const updateKpiPosition = useGraphStore((s) => s.updateKpiPosition);
   const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
   const setHighlightCategory = useGraphStore((s) => s.setHighlightCategory);
+  const setActivePerspectiveId = useGraphStore((s) => s.setActivePerspectiveId);
   const colorNames = useGraphStore((s) => s.colorNames);
   const openSearch = useGraphStore((s) => s.openSearch);
+
+  const handleActivePerspectiveChange = (nextId: string | null) => {
+    const prevId = preferences.activePerspectiveId;
+    setActivePerspectiveId(nextId);
+    if (
+      nextId &&
+      prevId == null &&
+      typeof window !== 'undefined' &&
+      !localStorage.getItem('align-canvas-perspective-onboarding-toast')
+    ) {
+      toast('info', t('settings.perspectiveOnboardingToast'));
+      localStorage.setItem('align-canvas-perspective-onboarding-toast', '1');
+    }
+  };
 
   const handleExport = () => {
     if (kpis.length === 0) {
@@ -231,16 +246,24 @@ export function Toolbar({
         </select>
       </label>
 
-      {preferences.activePerspectiveId ? (
+      {perspectives.length > 0 ? (
         <>
           <div className="mx-1 h-5 w-px bg-emerald-800" aria-hidden />
-          <span className="inline-flex max-w-[280px] items-center truncate rounded-full border border-emerald-700 bg-emerald-900/70 px-2 py-1 text-[11px] font-medium text-emerald-100">
-            {t('toolbar.metricPerspectiveBadge', {
-              name:
-                perspectives.find((p) => p.id === preferences.activePerspectiveId)
-                  ?.name ?? preferences.activePerspectiveId,
-            })}
-          </span>
+          <label className="flex items-center gap-1.5 text-xs text-emerald-200 whitespace-nowrap">
+            <select
+              className="input !w-auto !min-w-[160px] !py-1 !pr-7 text-xs"
+              value={preferences.activePerspectiveId ?? ''}
+              onChange={(e) => handleActivePerspectiveChange(e.target.value || null)}
+              title={t('toolbar.metricPerspectiveSelectTitle')}
+            >
+              <option value="">{t('toolbar.metricPerspectiveNeutral')}</option>
+              {perspectives.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </>
       ) : null}
 

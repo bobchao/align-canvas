@@ -25,7 +25,6 @@ const SUPPORTED_LANGUAGES = [
   { code: 'zh-TW', label: '繁體中文' },
 ] as const;
 
-const PERSPECTIVE_ONBOARD_LS_KEY = 'align-canvas-perspective-onboarding-toast';
 const SECTION_LS_PREFIX = 'align-canvas-settings-collapsed:';
 
 type SectionId =
@@ -103,7 +102,6 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
   const addPerspective = useGraphStore((s) => s.addPerspective);
   const renamePerspective = useGraphStore((s) => s.renamePerspective);
   const removePerspective = useGraphStore((s) => s.removePerspective);
-  const setActivePerspectiveId = useGraphStore((s) => s.setActivePerspectiveId);
   const colorNames = useGraphStore((s) => s.colorNames);
   const setColorName = useGraphStore((s) => s.setColorName);
   const [colorNameDrafts, setColorNameDrafts] = useState<Record<string, string>>({});
@@ -112,21 +110,6 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
   const [nameDraftByPerspectiveId, setNameDraftByPerspectiveId] = useState<Record<string, string>>(
     {},
   );
-
-  const handleActivePerspectiveChange = (value: string) => {
-    const nextId = value === '' ? null : value;
-    const prevId = preferences.activePerspectiveId;
-    setActivePerspectiveId(nextId);
-    if (
-      nextId &&
-      prevId == null &&
-      typeof window !== 'undefined' &&
-      !localStorage.getItem(PERSPECTIVE_ONBOARD_LS_KEY)
-    ) {
-      toast('info', t('settings.perspectiveOnboardingToast'));
-      localStorage.setItem(PERSPECTIVE_ONBOARD_LS_KEY, '1');
-    }
-  };
 
   const handleTryAddPerspective = () => {
     const created = addPerspective(newPerspectiveName);
@@ -176,27 +159,9 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
 
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
         <CollapsibleSection id="perspectives" title={t('settings.perspectiveSectionTitle')}>
-          <label className="label !mb-1 !text-[10px]">{t('settings.activePerspectiveSelect')}</label>
-          <select
-            className="input mb-3"
-            value={preferences.activePerspectiveId ?? ''}
-            onChange={(e) => handleActivePerspectiveChange(e.target.value)}
-            disabled={perspectives.length === 0}
-          >
-            <option value="">{t('settings.neutralPerspective')}</option>
-            {perspectives.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-          {preferences.activePerspectiveId ? (
-            <p className="mb-3 rounded-md border border-emerald-800/70 bg-emerald-950/50 px-2 py-1.5 text-[11px] leading-relaxed text-emerald-200/90">
-              {t('settings.perspectiveEditingHint')}
-            </p>
-          ) : perspectives.length === 0 ? (
-            <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-              {t('settings.perspectiveNeutralWhenEmpty')}
-            </p>
-          ) : null}
+          <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            {t('settings.perspectiveSectionIntro')}
+          </p>
 
           <div className="label !mb-1 !text-[10px]">{t('settings.perspectiveDefinitions')}</div>
           <div className="mb-3 flex gap-2">
