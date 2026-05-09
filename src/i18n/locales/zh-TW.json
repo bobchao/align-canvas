@@ -63,9 +63,7 @@
       "exported": "已匯出 JSON",
       "relayout": "已重新排版"
     },
-    "metricPerspectiveBadge": "視角：{{name}}",
-    "metricPerspectiveUnset": "尚未選定視角",
-    "noMetricPerspectiveHint": "在設定中選定部門／視角後，才能標示 Controllable Input 與 Output"
+    "metricPerspectiveBadge": "視角：{{name}}"
   },
   "inspector": {
     "noSelection": "尚未選取指標",
@@ -105,8 +103,6 @@
     "metricRoleUnset": "未標記",
     "metricRoleInput": "Controllable Input",
     "metricRoleOutput": "Output",
-    "metricRoleNeedPerspective": "若要標示 Controllable Input 或 Output，請先到「設定」新增部門／視角，並選定您目前使用的視角。",
-    "metricRoleNeedPerspectiveMulti": "尚未選定視角。請開啟設定，選好部門／視角後即可一次為多個指標套用角色。",
     "toast": {
       "nameEmpty": "名稱不能為空",
       "deleted": "已刪除 {{name}}（可用 Cmd+Z 還原）",
@@ -188,17 +184,20 @@
     "spacingComfortable": "舒適（預設）",
     "spacingWide": "寬鬆（較高可讀性）",
     "edgeRouting": "線條路徑",
-    "edgeSmoothstep": "Smooth Step（預設）",
+    "edgeSmoothstep": "Smooth Step",
     "edgeStep": "Step（直角）",
-    "edgeBezier": "Bezier（曲線）",
+    "edgeBezier": "Bezier（曲線，預設）",
     "categoryNaming": "分類命名",
     "language": "語言",
-    "perspectiveSectionTitle": "部門／視角（Controllable Input / Output）",
-    "perspectiveSectionIntro": "先有視角，再在畫布上標記各指標在您部門觀點下是「可自行施力的 Input」或「成果型 Output」。同一份 Canvas 裡，不同視角各自保存、互不干擾。",
+    "groups": {
+      "canvas": "畫布顯示",
+      "layout": "自動排版",
+      "interface": "介面"
+    },
+    "perspectiveSectionTitle": "部門／視角",
     "activePerspectiveSelect": "目前使用的視角",
     "neutralPerspective": "不偏不倚（不顯示或編輯標記）",
     "perspectiveEditingHint": "您正在檢視與編輯目前視角專屬的標記；切換視角後，畫面會顯示該視角的結果。",
-    "perspectiveNeutralExplanation": "維持不偏不倚時，畫布不會顯示 Input/Output，也無法編輯這些角色。",
     "perspectiveNeutralWhenEmpty": "尚未建立任何視角。請先在下方新增視角，再在這裡選定。",
     "perspectiveDefinitions": "視角清單（可新增、重新命名或刪除）",
     "newPerspectivePlaceholder": "例如：Growth、Fleet、BD…",
@@ -224,12 +223,8 @@
     "categoryPrefix": "分類：",
     "hasOtherCategories": "另有其他歸屬分類",
     "metricRole": {
-      "inputShort": "Input",
-      "inputTitle": "在此視角為 Controllable Input",
-      "outputShort": "Output",
-      "outputTitle": "在此視角為 Output",
-      "noneShort": "—",
-      "noneTitle": "在此視角尚未標記"
+      "inputBgTitle": "目前視角為 Controllable Input",
+      "outputBgTitle": "目前視角為 Output"
     }
   },
   "shortcuts": {

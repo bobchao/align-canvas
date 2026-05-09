@@ -100,31 +100,10 @@ export function Toolbar({
 
   return (
     <header className="relative z-40 flex shrink-0 items-center gap-1.5 border-b border-emerald-900 bg-emerald-950/90 px-3 py-2 backdrop-blur">
-      <div className="flex flex-wrap items-center gap-1.5 pr-2 font-semibold text-emerald-100 whitespace-nowrap">
+      <div className="flex items-center gap-1.5 pr-2 font-semibold text-emerald-100 whitespace-nowrap">
         <LayoutDashboard size={16} className="text-emerald-400" />
         <span>Align Canvas</span>
       </div>
-
-      {perspectives.length > 0 ? (
-        <>
-          <div className="mx-1 h-5 w-px bg-emerald-800" aria-hidden />
-          <div className="max-w-[min(420px,calc(100vw-560px))] shrink min-w-0">
-            {preferences.activePerspectiveId ? (
-              <span className="inline-flex items-center truncate rounded-full border border-emerald-700 bg-emerald-900/70 px-2 py-1 text-[11px] font-medium text-emerald-100">
-                {t('toolbar.metricPerspectiveBadge', {
-                  name:
-                    perspectives.find((p) => p.id === preferences.activePerspectiveId)
-                      ?.name ?? preferences.activePerspectiveId,
-                })}
-              </span>
-            ) : (
-              <span className="text-[11px] text-emerald-500/95" title={t('toolbar.noMetricPerspectiveHint')}>
-                {t('toolbar.metricPerspectiveUnset')}
-              </span>
-            )}
-          </div>
-        </>
-      ) : null}
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
 
@@ -251,6 +230,19 @@ export function Toolbar({
           })}
         </select>
       </label>
+
+      {preferences.activePerspectiveId ? (
+        <>
+          <div className="mx-1 h-5 w-px bg-emerald-800" aria-hidden />
+          <span className="inline-flex max-w-[280px] items-center truncate rounded-full border border-emerald-700 bg-emerald-900/70 px-2 py-1 text-[11px] font-medium text-emerald-100">
+            {t('toolbar.metricPerspectiveBadge', {
+              name:
+                perspectives.find((p) => p.id === preferences.activePerspectiveId)
+                  ?.name ?? preferences.activePerspectiveId,
+            })}
+          </span>
+        </>
+      ) : null}
 
       <div className="flex-1" />
       <button

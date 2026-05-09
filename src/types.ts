@@ -78,7 +78,7 @@ export interface Preferences {
 export const DEFAULT_PREFERENCES: Preferences = {
   layoutDirection: 'LR',
   layoutSpacingPreset: 'comfortable',
-  edgeRoutingMode: 'smoothstep',
+  edgeRoutingMode: 'bezier',
   showKpiCategoryLabels: false,
   activePerspectiveId: null,
 };

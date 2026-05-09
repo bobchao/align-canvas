@@ -43,15 +43,31 @@ function KpiNodeImpl(props: NodeProps) {
   const handleClass =
     '!h-5 !w-5 !border !border-brand/60 !bg-brand/15 !opacity-0 group-hover:!opacity-100 hover:!opacity-100 hover:!bg-brand/35 transition';
 
-  const titleParts = [kpi.note, categoryLine ? t('node.categoryPrefix') + categoryLine : ''].filter(
-    (x) => Boolean(x && String(x).trim()),
-  );
+  const roleBgClass =
+    perspectiveActive && metricRoleEffective === 'controllable_input'
+      ? 'bg-sky-950'
+      : perspectiveActive && metricRoleEffective === 'output'
+        ? 'bg-amber-950'
+        : 'bg-emerald-950';
+  const roleTitle =
+    perspectiveActive && metricRoleEffective === 'controllable_input'
+      ? t('node.metricRole.inputBgTitle')
+      : perspectiveActive && metricRoleEffective === 'output'
+        ? t('node.metricRole.outputBgTitle')
+        : '';
+
+  const titleParts = [
+    kpi.note,
+    categoryLine ? t('node.categoryPrefix') + categoryLine : '',
+    roleTitle,
+  ].filter((x) => Boolean(x && String(x).trim()));
   const titleAttr = titleParts.length > 0 ? titleParts.join('\n') : undefined;
 
   return (
     <div
       className={[
-        'group relative flex min-h-[72px] w-[200px] max-h-32 items-stretch overflow-hidden rounded-lg border bg-emerald-950 shadow-sm transition',
+        'group relative flex min-h-[72px] w-[200px] max-h-32 items-stretch overflow-hidden rounded-lg border shadow-sm transition',
+        roleBgClass,
         selected
           ? 'border-brand ring-2 ring-brand/70 shadow-[0_0_0_1px_rgba(16,185,129,0.45)]'
           : editing
@@ -72,9 +88,6 @@ function KpiNodeImpl(props: NodeProps) {
           <div className="truncate text-sm font-semibold text-emerald-50">
             {kpi.name}
           </div>
-          {perspectiveActive ? (
-            <MetricRoleBadge role={metricRoleEffective} />
-          ) : null}
           {!showKpiCategoryLabels && secondaryN > 0 ? (
             <span
               className="shrink-0 rounded bg-emerald-800/80 px-1.5 text-[10px] font-medium text-emerald-200"
@@ -115,38 +128,6 @@ function KpiNodeImpl(props: NodeProps) {
         />
       ))}
     </div>
-  );
-}
-
-function MetricRoleBadge({ role }: { role: MetricRole | null }) {
-  const { t } = useTranslation();
-  if (role === 'controllable_input') {
-    return (
-      <span
-        className="shrink-0 rounded bg-sky-600/95 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white"
-        title={t('node.metricRole.inputTitle')}
-      >
-        {t('node.metricRole.inputShort')}
-      </span>
-    );
-  }
-  if (role === 'output') {
-    return (
-      <span
-        className="shrink-0 rounded bg-amber-600/95 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white"
-        title={t('node.metricRole.outputTitle')}
-      >
-        {t('node.metricRole.outputShort')}
-      </span>
-    );
-  }
-  return (
-    <span
-      className="shrink-0 rounded border border-slate-500/55 bg-transparent px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-emerald-500/95"
-      title={t('node.metricRole.noneTitle')}
-    >
-      {t('node.metricRole.noneShort')}
-    </span>
   );
 }
 

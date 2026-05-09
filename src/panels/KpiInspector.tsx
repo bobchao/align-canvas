@@ -132,11 +132,7 @@ export function KpiInspector() {
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="rounded-md border border-emerald-900/50 bg-emerald-950/40 p-3 text-[11px] leading-relaxed text-emerald-200/90">
-              {t('inspector.metricRoleNeedPerspectiveMulti')}
-            </div>
-          )}
+          ) : null}
           <div>
             <div className="label">{t('inspector.selectedList')}</div>
             <ul className="max-h-[300px] space-y-1 overflow-y-auto">
@@ -366,11 +362,7 @@ function KpiSingleInspector({ kpi }: { kpi: KPI }) {
               </button>
             </div>
           </div>
-        ) : (
-          <div className="rounded-md border border-emerald-900/50 bg-emerald-950/40 p-3 text-[11px] leading-relaxed text-emerald-200/90">
-            {t('inspector.metricRoleNeedPerspective')}
-          </div>
-        )}
+        ) : null}
         <div>
           <label className="label">{t('inspector.primaryCategory')}</label>
           <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">

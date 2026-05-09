@@ -63,9 +63,7 @@
       "exported": "Exported JSON",
       "relayout": "Layout refreshed"
     },
-    "metricPerspectiveBadge": "Perspective: {{name}}",
-    "metricPerspectiveUnset": "No perspective selected",
-    "noMetricPerspectiveHint": "Choose a team perspective in Settings before marking Controllable Inputs and Outputs"
+    "metricPerspectiveBadge": "Perspective: {{name}}"
   },
   "inspector": {
     "noSelection": "No indicator selected",
@@ -105,8 +103,6 @@
     "metricRoleUnset": "Unlabeled",
     "metricRoleInput": "Controllable Input",
     "metricRoleOutput": "Output",
-    "metricRoleNeedPerspective": "To label Controllable Inputs or Outputs, open Settings, add a team perspective, then select the one you're using.",
-    "metricRoleNeedPerspectiveMulti": "No perspective selected yet. Open Settings to pick a perspective, then you can apply roles to all selected nodes.",
     "toast": {
       "nameEmpty": "Name cannot be empty",
       "deleted": "Deleted {{name}} (Cmd+Z to undo)",
@@ -188,17 +184,20 @@
     "spacingComfortable": "Comfortable (default)",
     "spacingWide": "Wide (better readability)",
     "edgeRouting": "Edge Routing",
-    "edgeSmoothstep": "Smooth Step (default)",
+    "edgeSmoothstep": "Smooth Step",
     "edgeStep": "Step (right angles)",
-    "edgeBezier": "Bezier (curved)",
+    "edgeBezier": "Bezier (curved, default)",
     "categoryNaming": "Category Naming",
     "language": "Language",
-    "perspectiveSectionTitle": "Team perspective (Controllable Input / Output)",
-    "perspectiveSectionIntro": "Define who is \"viewing\" this canvas. Input/Output markings are stored per perspective so teams don't overwrite each other on the same file.",
+    "groups": {
+      "canvas": "Canvas display",
+      "layout": "Auto layout",
+      "interface": "Interface"
+    },
+    "perspectiveSectionTitle": "Team perspective",
     "activePerspectiveSelect": "Active perspective",
     "neutralPerspective": "Neutral (hide & lock Input/Output markings)",
     "perspectiveEditingHint": "You're viewing and editing markings for the perspective selected above. Switch perspective to see another team's labels.",
-    "perspectiveNeutralExplanation": "While neutral, the canvas shows no Input/Output chips and you can't edit those roles.",
     "perspectiveNeutralWhenEmpty": "Add at least one perspective below, then choose it here.",
     "perspectiveDefinitions": "Perspective list (add, rename, or remove)",
     "newPerspectivePlaceholder": "e.g. Growth, Fleet, BD…",
@@ -226,12 +225,8 @@
     "categoryPrefix": "Category: ",
     "hasOtherCategories": "Has other categories",
     "metricRole": {
-      "inputShort": "Input",
-      "inputTitle": "Controllable Input for this perspective",
-      "outputShort": "Output",
-      "outputTitle": "Output for this perspective",
-      "noneShort": "—",
-      "noneTitle": "Unlabeled for this perspective"
+      "inputBgTitle": "Controllable Input for this perspective",
+      "outputBgTitle": "Output for this perspective"
     }
   },
   "shortcuts": {

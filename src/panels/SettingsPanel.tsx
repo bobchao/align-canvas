@@ -1,5 +1,13 @@
-import { FileInput, MoveHorizontal, MoveVertical, Plus, Trash2, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import {
+  ChevronDown,
+  FileInput,
+  MoveHorizontal,
+  MoveVertical,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGraphStore } from '../store/useGraphStore';
 import { KPI_COLOR_I18N_KEYS, KPI_COLOR_PALETTE } from '../types';
@@ -18,6 +26,74 @@ const SUPPORTED_LANGUAGES = [
 ] as const;
 
 const PERSPECTIVE_ONBOARD_LS_KEY = 'align-canvas-perspective-onboarding-toast';
+const SECTION_LS_PREFIX = 'align-canvas-settings-collapsed:';
+
+type SectionId =
+  | 'perspectives'
+  | 'data'
+  | 'canvas'
+  | 'layout'
+  | 'naming'
+  | 'interface';
+
+const SECTION_DEFAULT_OPEN: Record<SectionId, boolean> = {
+  perspectives: true,
+  data: true,
+  canvas: false,
+  layout: false,
+  naming: false,
+  interface: false,
+};
+
+function loadInitialOpen(id: SectionId): boolean {
+  if (typeof window === 'undefined') return SECTION_DEFAULT_OPEN[id];
+  try {
+    const v = localStorage.getItem(SECTION_LS_PREFIX + id);
+    if (v === '1') return true;
+    if (v === '0') return false;
+  } catch {
+    // ignore (safari private mode etc.)
+  }
+  return SECTION_DEFAULT_OPEN[id];
+}
+
+function CollapsibleSection({
+  id,
+  title,
+  children,
+}: {
+  id: SectionId;
+  title: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState<boolean>(() => loadInitialOpen(id));
+  return (
+    <details
+      open={open}
+      onToggle={(e) => {
+        const next = (e.currentTarget as HTMLDetailsElement).open;
+        setOpen(next);
+        try {
+          localStorage.setItem(SECTION_LS_PREFIX + id, next ? '1' : '0');
+        } catch {
+          // ignore
+        }
+      }}
+      className="group rounded-md border border-emerald-900/60 bg-emerald-950/30"
+    >
+      <summary
+        className="flex cursor-pointer select-none items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-900/40 list-none [&::-webkit-details-marker]:hidden"
+      >
+        <span>{title}</span>
+        <ChevronDown
+          size={14}
+          className="text-emerald-300 transition-transform duration-150 group-open:rotate-180"
+        />
+      </summary>
+      <div className="border-t border-emerald-900/60 px-3 py-3">{children}</div>
+    </details>
+  );
+}
 
 export function SettingsPanel({ onClose, onImportChoice }: Props) {
   const { t } = useTranslation();
@@ -98,44 +174,8 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
         </button>
       </header>
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        <section>
-          <div className="label">{t('settings.data')}</div>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <FileInput size={14} />
-            {t('settings.importJson')}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={handleFileChosen}
-          />
-        </section>
-
-        <section>
-          <div className="label">{t('settings.language')}</div>
-          <select
-            className="input"
-            value={i18n.language}
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
-          >
-            {SUPPORTED_LANGUAGES.map(({ code, label }) => (
-              <option key={code} value={code}>{label}</option>
-            ))}
-          </select>
-        </section>
-
-        <section>
-          <div className="label">{t('settings.perspectiveSectionTitle')}</div>
-          <p className="mb-2 text-xs leading-relaxed text-emerald-200/85">
-            {t('settings.perspectiveSectionIntro')}
-          </p>
+      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+        <CollapsibleSection id="perspectives" title={t('settings.perspectiveSectionTitle')}>
           <label className="label !mb-1 !text-[10px]">{t('settings.activePerspectiveSelect')}</label>
           <select
             className="input mb-3"
@@ -156,11 +196,7 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
             <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
               {t('settings.perspectiveNeutralWhenEmpty')}
             </p>
-          ) : (
-            <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-              {t('settings.perspectiveNeutralExplanation')}
-            </p>
-          )}
+          ) : null}
 
           <div className="label !mb-1 !text-[10px]">{t('settings.perspectiveDefinitions')}</div>
           <div className="mb-3 flex gap-2">
@@ -226,91 +262,112 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
               ))}
             </ul>
           )}
-        </section>
+        </CollapsibleSection>
 
-        <section>
-          <div className="label">{t('settings.display')}</div>
-          <label className="flex cursor-pointer items-start gap-2 text-sm text-emerald-100">
-            <input
-              type="checkbox"
-              className="mt-1 rounded"
-              checked={preferences.showKpiCategoryLabels}
-              onChange={(e) =>
-                setPreferences({ showKpiCategoryLabels: e.target.checked })
-              }
-            />
-            <span>
-              {t('settings.showCategoryLabels')}
-            </span>
-          </label>
-        </section>
+        <CollapsibleSection id="data" title={t('settings.data')}>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <FileInput size={14} />
+            {t('settings.importJson')}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={handleFileChosen}
+          />
+        </CollapsibleSection>
 
-        <section>
-          <div className="label">{t('settings.layoutDirection')}</div>
-          <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1 py-1">
-            <button
-              type="button"
-              className={[
-                'btn-ghost !p-1.5',
-                preferences.layoutDirection === 'LR' ? '!bg-emerald-800' : '',
-              ].join(' ')}
-              title={t('settings.layoutLR')}
-              aria-label={t('settings.layoutLR')}
-              onClick={() => setPreferences({ layoutDirection: 'LR' })}
-            >
-              <MoveHorizontal size={14} />
-            </button>
-            <button
-              type="button"
-              className={[
-                'btn-ghost !p-1.5',
-                preferences.layoutDirection === 'TB' ? '!bg-emerald-800' : '',
-              ].join(' ')}
-              title={t('settings.layoutTB')}
-              aria-label={t('settings.layoutTB')}
-              onClick={() => setPreferences({ layoutDirection: 'TB' })}
-            >
-              <MoveVertical size={14} />
-            </button>
+        <CollapsibleSection id="canvas" title={t('settings.groups.canvas')}>
+          <div className="space-y-3">
+            <div>
+              <div className="label !mb-1 !text-[10px]">{t('settings.display')}</div>
+              <label className="flex cursor-pointer items-start gap-2 text-sm text-emerald-100">
+                <input
+                  type="checkbox"
+                  className="mt-1 rounded"
+                  checked={preferences.showKpiCategoryLabels}
+                  onChange={(e) =>
+                    setPreferences({ showKpiCategoryLabels: e.target.checked })
+                  }
+                />
+                <span>{t('settings.showCategoryLabels')}</span>
+              </label>
+            </div>
+            <div>
+              <div className="label !mb-1 !text-[10px]">{t('settings.edgeRouting')}</div>
+              <select
+                className="input"
+                value={preferences.edgeRoutingMode}
+                onChange={(e) =>
+                  setPreferences({
+                    edgeRoutingMode: e.target.value as 'bezier' | 'smoothstep' | 'step',
+                  })
+                }
+              >
+                <option value="bezier">{t('settings.edgeBezier')}</option>
+                <option value="smoothstep">{t('settings.edgeSmoothstep')}</option>
+                <option value="step">{t('settings.edgeStep')}</option>
+              </select>
+            </div>
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section>
-          <div className="label">{t('settings.spacing')}</div>
-          <select
-            className="input"
-            value={preferences.layoutSpacingPreset}
-            onChange={(e) =>
-              setPreferences({
-                layoutSpacingPreset: e.target.value as 'compact' | 'comfortable' | 'wide',
-              })
-            }
-          >
-            <option value="compact">{t('settings.spacingCompact')}</option>
-            <option value="comfortable">{t('settings.spacingComfortable')}</option>
-            <option value="wide">{t('settings.spacingWide')}</option>
-          </select>
-        </section>
+        <CollapsibleSection id="layout" title={t('settings.groups.layout')}>
+          <div className="space-y-3">
+            <div>
+              <div className="label !mb-1 !text-[10px]">{t('settings.layoutDirection')}</div>
+              <div className="flex items-center gap-1 rounded-md border border-emerald-800 bg-emerald-950 px-1 py-1">
+                <button
+                  type="button"
+                  className={[
+                    'btn-ghost !p-1.5',
+                    preferences.layoutDirection === 'LR' ? '!bg-emerald-800' : '',
+                  ].join(' ')}
+                  title={t('settings.layoutLR')}
+                  aria-label={t('settings.layoutLR')}
+                  onClick={() => setPreferences({ layoutDirection: 'LR' })}
+                >
+                  <MoveHorizontal size={14} />
+                </button>
+                <button
+                  type="button"
+                  className={[
+                    'btn-ghost !p-1.5',
+                    preferences.layoutDirection === 'TB' ? '!bg-emerald-800' : '',
+                  ].join(' ')}
+                  title={t('settings.layoutTB')}
+                  aria-label={t('settings.layoutTB')}
+                  onClick={() => setPreferences({ layoutDirection: 'TB' })}
+                >
+                  <MoveVertical size={14} />
+                </button>
+              </div>
+            </div>
+            <div>
+              <div className="label !mb-1 !text-[10px]">{t('settings.spacing')}</div>
+              <select
+                className="input"
+                value={preferences.layoutSpacingPreset}
+                onChange={(e) =>
+                  setPreferences({
+                    layoutSpacingPreset: e.target.value as 'compact' | 'comfortable' | 'wide',
+                  })
+                }
+              >
+                <option value="compact">{t('settings.spacingCompact')}</option>
+                <option value="comfortable">{t('settings.spacingComfortable')}</option>
+                <option value="wide">{t('settings.spacingWide')}</option>
+              </select>
+            </div>
+          </div>
+        </CollapsibleSection>
 
-        <section>
-          <div className="label">{t('settings.edgeRouting')}</div>
-          <select
-            className="input"
-            value={preferences.edgeRoutingMode}
-            onChange={(e) =>
-              setPreferences({
-                edgeRoutingMode: e.target.value as 'bezier' | 'smoothstep' | 'step',
-              })
-            }
-          >
-            <option value="smoothstep">{t('settings.edgeSmoothstep')}</option>
-            <option value="step">{t('settings.edgeStep')}</option>
-            <option value="bezier">{t('settings.edgeBezier')}</option>
-          </select>
-        </section>
-
-        <section>
-          <div className="label">{t('settings.categoryNaming')}</div>
+        <CollapsibleSection id="naming" title={t('settings.categoryNaming')}>
           <div className="space-y-2">
             {KPI_COLOR_PALETTE.map((c) => {
               const defaultLabel = t(KPI_COLOR_I18N_KEYS[c] ?? c);
@@ -353,7 +410,20 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
               );
             })}
           </div>
-        </section>
+        </CollapsibleSection>
+
+        <CollapsibleSection id="interface" title={t('settings.groups.interface')}>
+          <div className="label !mb-1 !text-[10px]">{t('settings.language')}</div>
+          <select
+            className="input"
+            value={i18n.language}
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+          >
+            {SUPPORTED_LANGUAGES.map(({ code, label }) => (
+              <option key={code} value={code}>{label}</option>
+            ))}
+          </select>
+        </CollapsibleSection>
       </div>
     </aside>
   );
