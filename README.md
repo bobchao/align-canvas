@@ -1,5 +1,7 @@
 # Align Canvas
 
+**[👉 立即使用](https://bobchao.github.io/align-canvas/)**
+
 純前端的 KPI 關係畫布 Web App。把一整批 KPI 放到畫布上，拉出它們之間的「正向 / 負向 × 直接 / 間接」四種影響關係，再透過 Highlight 找出指標的上下游依賴。資料完全存放在瀏覽器 IndexedDB，也可以隨時 export / import JSON。
 
 ## 快速上手
