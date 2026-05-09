@@ -1,9 +1,10 @@
 import type { KPI } from '../types';
 import {
   DEFAULT_KPI_CATEGORY_COLOR,
-  KPI_COLOR_LABELS,
+  KPI_COLOR_I18N_KEYS,
   KPI_COLOR_PALETTE,
 } from '../types';
+import i18n from '../i18n';
 
 /** 未存主分類欄位時的 effective primary（預設灰）。 */
 export function kpiEffectivePrimaryColor(k: KPI): string {
@@ -86,5 +87,5 @@ export function categoryDisplayLabel(
   c: string,
   colorNames: Record<string, string>,
 ): string {
-  return colorNames[c] || KPI_COLOR_LABELS[c] || c;
+  return colorNames[c] || i18n.t(KPI_COLOR_I18N_KEYS[c] ?? c) || c;
 }

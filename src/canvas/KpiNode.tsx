@@ -1,5 +1,6 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   categoryDisplayLabel,
   kpiDisplayColor,
@@ -17,6 +18,7 @@ export interface KpiNodeData extends Record<string, unknown> {
 }
 
 function KpiNodeImpl(props: NodeProps) {
+  const { t } = useTranslation();
   const data = props.data as KpiNodeData;
   const { kpi, highlighted, editing } = data;
   const selected = props.selected;
@@ -37,7 +39,7 @@ function KpiNodeImpl(props: NodeProps) {
   const handleClass =
     '!h-5 !w-5 !border !border-brand/60 !bg-brand/15 !opacity-0 group-hover:!opacity-100 hover:!opacity-100 hover:!bg-brand/35 transition';
 
-  const titleParts = [kpi.note, categoryLine ? `分類：${categoryLine}` : ''].filter(
+  const titleParts = [kpi.note, categoryLine ? t('node.categoryPrefix') + categoryLine : ''].filter(
     (x) => Boolean(x && String(x).trim()),
   );
   const titleAttr = titleParts.length > 0 ? titleParts.join('\n') : undefined;
@@ -69,7 +71,7 @@ function KpiNodeImpl(props: NodeProps) {
           {!showKpiCategoryLabels && secondaryN > 0 ? (
             <span
               className="shrink-0 rounded bg-emerald-800/80 px-1.5 text-[10px] font-medium text-emerald-200"
-              title="另有其他歸屬分類"
+              title={t('node.hasOtherCategories')}
             >
               +{secondaryN}
             </span>

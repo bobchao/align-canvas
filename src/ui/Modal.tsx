@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function Modal({ open, onClose, title, children, footer, widthClass }: Props) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -44,7 +47,7 @@ export function Modal({ open, onClose, title, children, footer, widthClass }: Pr
             type="button"
             className="btn-ghost !p-1.5"
             onClick={onClose}
-            aria-label="關閉"
+            aria-label={t('common.close')}
           >
             <X size={16} />
           </button>

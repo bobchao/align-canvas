@@ -75,3 +75,16 @@ export const KPI_COLOR_LABELS: Record<string, string> = {
   '#a855f7': '紫',
   '#f8fafc': '白',
 };
+
+/** Maps color hex codes to i18n translation keys under the "colors" namespace. */
+export const KPI_COLOR_I18N_KEYS: Record<string, string> = {
+  '#64748b': 'colors.gray',
+  '#ef4444': 'colors.red',
+  '#f97316': 'colors.orange',
+  '#eab308': 'colors.yellow',
+  '#22c55e': 'colors.green',
+  '#3b82f6': 'colors.blue',
+  '#4f46e5': 'colors.indigo',
+  '#a855f7': 'colors.purple',
+  '#f8fafc': 'colors.white',
+};

@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../ui/Modal';
 import { useGraphStore } from '../store/useGraphStore';
 import { toast } from '../ui/Toast';
 import { KPI_COLOR_PALETTE } from '../types';
+import { categoryDisplayLabel } from '../lib/kpiCategory';
 
 interface Props {
   open: boolean;
@@ -10,18 +12,20 @@ interface Props {
 }
 
 export function BatchAddDialog({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [color, setColor] = useState<string>(KPI_COLOR_PALETTE[0]);
   const batchAdd = useGraphStore((s) => s.batchAddKpis);
+  const colorNames = useGraphStore((s) => s.colorNames);
 
   const handleSubmit = () => {
     const lines = text.split(/\r?\n/);
     const created = batchAdd(lines, color);
     if (created.length === 0) {
-      toast('info', '沒有新增任何指標（可能是空白或重複）');
+      toast('info', t('batchAdd.toast.noneAdded'));
       return;
     }
-    toast('success', `已新增 ${created.length} 個指標`);
+    toast('success', t('batchAdd.toast.added', { count: created.length }));
     setText('');
     onClose();
   };
@@ -38,12 +42,12 @@ export function BatchAddDialog({ open, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title="批次新增 KPI 指標"
+      title={t('batchAdd.title')}
       widthClass="max-w-xl"
       footer={
         <>
           <button type="button" className="btn" onClick={onClose}>
-            取消
+            {t('batchAdd.cancel')}
           </button>
           <button
             type="button"
@@ -51,27 +55,27 @@ export function BatchAddDialog({ open, onClose }: Props) {
             disabled={previewCount === 0}
             onClick={handleSubmit}
           >
-            新增 {previewCount} 個指標
+            {t('batchAdd.addCount', { count: previewCount })}
           </button>
         </>
       }
     >
       <div className="space-y-3">
         <div>
-          <label className="label">指標名稱（一行一個）</label>
+          <label className="label">{t('batchAdd.nameLabel')}</label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={'例如：\n年度營收\n新客戶數\n客戶留存率'}
+            placeholder={t('batchAdd.placeholder')}
             className="input min-h-[220px] resize-y font-mono text-[13px]"
             autoFocus
           />
           <p className="mt-1 text-xs text-emerald-300">
-            空白行會自動忽略，與現有指標同名者會跳過。
+            {t('batchAdd.hint')}
           </p>
         </div>
         <div>
-          <label className="label">分類顏色（可於新增後再調整）</label>
+          <label className="label">{t('batchAdd.colorLabel')}</label>
           <div className="flex flex-wrap gap-2">
             {KPI_COLOR_PALETTE.map((c) => (
               <button
@@ -85,7 +89,7 @@ export function BatchAddDialog({ open, onClose }: Props) {
                     : 'border-transparent',
                 ].join(' ')}
                 style={{ backgroundColor: c }}
-                aria-label={c}
+                aria-label={categoryDisplayLabel(c, colorNames)}
               />
             ))}
           </div>

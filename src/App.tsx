@@ -1,5 +1,6 @@
 import { ReactFlowProvider } from '@xyflow/react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KpiCanvas } from './canvas/KpiCanvas';
 import { BatchAddDialog } from './panels/BatchAddDialog';
 import { ImportDialog } from './panels/ImportDialog';
@@ -19,6 +20,7 @@ import { UrlImportConfirmDialog } from './panels/UrlImportConfirmDialog';
 export default function App() {
   const hydrated = usePersistence();
   useShortcuts();
+  const { t } = useTranslation();
 
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
@@ -51,15 +53,15 @@ export default function App() {
       strength: 'direct',
     });
     if (!created) {
-      toast('error', '建立失敗（可能已存在相同方向的關係）');
+      toast('error', t('app.toast.relationCreateFailed'));
       return;
     }
-    toast('success', '已建立關係');
+    toast('success', t('app.toast.relationCreated'));
     setSelectedKpi(null);
     setHighlightSeed(null);
     setSettingsOpen(false);
     setActiveRelationId(created.id);
-  }, [addRelation, setActiveRelationId, setHighlightSeed, setSelectedKpi]);
+  }, [addRelation, setActiveRelationId, setHighlightSeed, setSelectedKpi, t]);
 
   const openEditRelation = useCallback((relationId: string) => {
     setSelectedKpi(null);
@@ -92,7 +94,7 @@ export default function App() {
   if (!hydrated) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-slate-500">
-        載入中…
+        {t('app.loading')}
       </div>
     );
   }
@@ -105,7 +107,7 @@ export default function App() {
         <Toolbar
           onBatchAdd={() => setBatchOpen(true)}
           onQuickAdd={() => {
-            const created = addKpi({ name: `指標 ${kpis.length + 1}` });
+            const created = addKpi({ name: t('app.quickAddName', { number: kpis.length + 1 }) });
             setFocusNodeId(created.id);
             setSelectedKpi(created.id);
           }}
@@ -135,10 +137,10 @@ export default function App() {
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <div className="pointer-events-auto panel max-w-sm p-6 text-center">
                   <h2 className="text-base font-semibold text-emerald-50">
-                    開始打造你的 KPI 關係畫布
+                    {t('app.emptyState.title')}
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-emerald-200">
-                    先批次新增一批指標，再拖拉兩個節點之間建立關係，最後點擊指標查看它受誰影響、又影響了誰。
+                    {t('app.emptyState.desc')}
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
                     <button
@@ -146,16 +148,14 @@ export default function App() {
                       className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500"
                       onClick={() => setBatchOpen(true)}
                     >
-                      <Plus size={14} /> 批次新增
+                      <Plus size={14} /> {t('app.emptyState.batchAdd')}
                     </button>
                     <button
                       type="button"
                       className="btn"
-                      onClick={() =>
-                        addKpi({ name: '營收' })
-                      }
+                      onClick={() => addKpi({ name: t('app.exampleKpiName') })}
                     >
-                      新增範例指標
+                      {t('app.emptyState.addExample')}
                     </button>
                   </div>
                 </div>
@@ -185,15 +185,15 @@ export default function App() {
           onClose={() => setImportPreview(null)}
           onOverwrite={() => {
             if (!importPreview) return;
-            replaceAll(importPreview, '匯入（覆蓋）');
-            toast('success', '已匯入並覆蓋畫布');
+            replaceAll(importPreview, t('app.historyLabel.importOverwrite'));
+            toast('success', t('app.toast.importOverwrite'));
             setImportPreview(null);
           }}
           onMerge={() => {
             if (!importPreview) return;
             const merged = mergeImports({ kpis, relations, colorNames }, importPreview);
-            replaceAll(merged, '匯入（合併）');
-            toast('success', '已合併匯入資料');
+            replaceAll(merged, t('app.historyLabel.importMerge'));
+            toast('success', t('app.toast.importMerge'));
             setImportPreview(null);
           }}
         />
@@ -210,14 +210,14 @@ export default function App() {
               preferences: local.preferences,
               colorNames: local.colorNames,
             });
-            toast('info', '已保留本機畫布');
+            toast('info', t('app.toast.keptLocal'));
           }}
           onConfirm={() => {
             if (!urlImportConflict) return;
             const { remote } = urlImportConflict;
-            replaceAll(remote, '從網址匯入');
+            replaceAll(remote, t('app.historyLabel.importFromUrl'));
             clearUrlImportConflict();
-            toast('success', '已從網址匯入並寫入本機');
+            toast('success', t('app.toast.importedFromUrl'));
           }}
         />
 
