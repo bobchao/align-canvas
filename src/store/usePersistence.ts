@@ -49,6 +49,8 @@ export function usePersistence() {
                 relations: remote.relations,
                 preferences: persisted.preferences,
                 colorNames: remote.colorNames,
+                perspectives: remote.perspectives,
+                metricRoles: remote.metricRoles,
               });
             }
             removeUrlImportParamFromAddressBar();
@@ -76,11 +78,20 @@ export function usePersistence() {
         relations,
         preferences,
         colorNames,
+        perspectives,
+        metricRoles,
         hydrated: h,
         urlImportConflict,
       } = useGraphStore.getState();
       if (!h || urlImportConflict) return;
-      savePersistedState({ kpis, relations, preferences, colorNames }).catch((err) => {
+      savePersistedState({
+        kpis,
+        relations,
+        preferences,
+        colorNames,
+        perspectives,
+        metricRoles,
+      }).catch((err) => {
         console.error('Failed to persist to IndexedDB', err);
       });
     }, 300);
@@ -91,7 +102,9 @@ export function usePersistence() {
         state.kpis !== prev.kpis ||
         state.relations !== prev.relations ||
         state.preferences !== prev.preferences ||
-        state.colorNames !== prev.colorNames
+        state.colorNames !== prev.colorNames ||
+        state.perspectives !== prev.perspectives ||
+        state.metricRoles !== prev.metricRoles
       ) {
         save();
       }

@@ -27,6 +27,8 @@ const useToastStore = create<ToastStore>((set) => ({
   dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
 
+/** Imperative helper for non-component call sites. */
+// eslint-disable-next-line react-refresh/only-export-components -- paired with ToastViewport in this module
 export function toast(kind: ToastKind, message: string) {
   useToastStore.getState().push(kind, message);
 }

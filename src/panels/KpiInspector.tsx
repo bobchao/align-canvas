@@ -1,5 +1,5 @@
 import { Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   categoryDisplayLabel,
@@ -7,6 +7,7 @@ import {
   kpiEffectivePrimaryColor,
 } from '../lib/kpiCategory';
 import { useGraphStore } from '../store/useGraphStore';
+import type { KPI, MetricRole } from '../types';
 import { KPI_COLOR_PALETTE } from '../types';
 import { toast } from '../ui/Toast';
 
@@ -14,31 +15,19 @@ export function KpiInspector() {
   const { t } = useTranslation();
   const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
-  const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
   const setSelectedKpis = useGraphStore((s) => s.setSelectedKpis);
-  const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
   const kpis = useGraphStore((s) => s.kpis);
-  const relations = useGraphStore((s) => s.relations);
-  const updateKpi = useGraphStore((s) => s.updateKpi);
   const updateKpiColors = useGraphStore((s) => s.updateKpiColors);
-  const removeKpi = useGraphStore((s) => s.removeKpi);
-  const removeRelation = useGraphStore((s) => s.removeRelation);
   const colorNames = useGraphStore((s) => s.colorNames);
+  const preferences = useGraphStore((s) => s.preferences);
+  const perspectives = useGraphStore((s) => s.perspectives);
+  const setKpiMetricRolesForKpis = useGraphStore((s) => s.setKpiMetricRolesForKpis);
+  const activePerspectiveId = preferences.activePerspectiveId;
 
   const kpi = useMemo(
     () => kpis.find((k) => k.id === selectedKpiId) ?? null,
     [kpis, selectedKpiId],
   );
-
-  const [name, setName] = useState('');
-  const [note, setNote] = useState('');
-
-  useEffect(() => {
-    if (kpi) {
-      setName(kpi.name);
-      setNote(kpi.note ?? '');
-    }
-  }, [kpi]);
 
   const selectedKpis = useMemo(
     () => kpis.filter((k) => selectedKpiIds.includes(k.id)),
@@ -47,6 +36,9 @@ export function KpiInspector() {
   const isMultiSelected = selectedKpis.length > 1;
 
   if (isMultiSelected) {
+    const perspectiveName =
+      activePerspectiveId &&
+      perspectives.find((p) => p.id === activePerspectiveId)?.name;
     return (
       <aside className="panel flex w-[320px] shrink-0 flex-col overflow-hidden">
         <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
@@ -86,6 +78,65 @@ export function KpiInspector() {
               ))}
             </div>
           </div>
+          {activePerspectiveId ? (
+            <div>
+              <label className="label">{t('inspector.metricRoleTitle')}</label>
+              <p className="mb-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                {t('inspector.metricRoleScopeHint', {
+                  name: perspectiveName ?? activePerspectiveId,
+                })}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  className="btn text-xs !py-1.5"
+                  onClick={() => {
+                    setKpiMetricRolesForKpis(activePerspectiveId, selectedKpiIds, null);
+                    toast(
+                      'success',
+                      t('inspector.toast.metricRolesBatchUnset', { count: selectedKpiIds.length }),
+                    );
+                  }}
+                >
+                  {t('inspector.metricRoleUnset')}
+                </button>
+                <button
+                  type="button"
+                  className="btn text-xs !py-1.5"
+                  onClick={() => {
+                    setKpiMetricRolesForKpis(
+                      activePerspectiveId,
+                      selectedKpiIds,
+                      'controllable_input',
+                    );
+                    toast(
+                      'success',
+                      t('inspector.toast.metricRolesBatchSet', { count: selectedKpiIds.length }),
+                    );
+                  }}
+                >
+                  {t('inspector.metricRoleInput')}
+                </button>
+                <button
+                  type="button"
+                  className="btn text-xs !py-1.5"
+                  onClick={() => {
+                    setKpiMetricRolesForKpis(activePerspectiveId, selectedKpiIds, 'output');
+                    toast(
+                      'success',
+                      t('inspector.toast.metricRolesBatchSet', { count: selectedKpiIds.length }),
+                    );
+                  }}
+                >
+                  {t('inspector.metricRoleOutput')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-md border border-emerald-900/50 bg-emerald-950/40 p-3 text-[11px] leading-relaxed text-emerald-200/90">
+              {t('inspector.metricRoleNeedPerspectiveMulti')}
+            </div>
+          )}
           <div>
             <div className="label">{t('inspector.selectedList')}</div>
             <ul className="max-h-[300px] space-y-1 overflow-y-auto">
@@ -149,6 +200,27 @@ export function KpiInspector() {
     );
   }
 
+  return <KpiSingleInspector key={kpi.id} kpi={kpi} />;
+}
+
+function KpiSingleInspector({ kpi }: { kpi: KPI }) {
+  const { t } = useTranslation();
+  const [name, setName] = useState(kpi.name);
+  const [note, setNote] = useState(kpi.note ?? '');
+  const kpis = useGraphStore((s) => s.kpis);
+  const relations = useGraphStore((s) => s.relations);
+  const updateKpi = useGraphStore((s) => s.updateKpi);
+  const removeKpi = useGraphStore((s) => s.removeKpi);
+  const removeRelation = useGraphStore((s) => s.removeRelation);
+  const colorNames = useGraphStore((s) => s.colorNames);
+  const preferences = useGraphStore((s) => s.preferences);
+  const perspectives = useGraphStore((s) => s.perspectives);
+  const metricRoles = useGraphStore((s) => s.metricRoles);
+  const setKpiMetricRole = useGraphStore((s) => s.setKpiMetricRole);
+  const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
+  const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
+  const activePerspectiveId = preferences.activePerspectiveId;
+
   const incoming = relations.filter((r) => r.targetId === kpi.id);
   const outgoing = relations.filter((r) => r.sourceId === kpi.id);
 
@@ -206,6 +278,14 @@ export function KpiInspector() {
 
   const lookupName = (id: string) => kpis.find((x) => x.id === id)?.name ?? t('inspector.unknown');
 
+  const currentMetricRole: MetricRole | null =
+    activePerspectiveId != null
+      ? metricRoles[activePerspectiveId]?.[kpi.id] ?? null
+      : null;
+  const activePerspectiveDisplayName = perspectives.find(
+    (p) => p.id === activePerspectiveId,
+  )?.name;
+
   return (
     <aside className="panel flex w-[320px] shrink-0 flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
@@ -252,6 +332,45 @@ export function KpiInspector() {
             className="input min-h-[72px] resize-y"
           />
         </div>
+        {activePerspectiveId ? (
+          <div>
+            <label className="label">{t('inspector.metricRoleTitle')}</label>
+            <p className="mb-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {t('inspector.metricRoleScopeHint', {
+                name: activePerspectiveDisplayName ?? activePerspectiveId,
+              })}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                className={metricRoleChoiceClass(currentMetricRole === null)}
+                onClick={() => setKpiMetricRole(activePerspectiveId, kpi.id, null)}
+              >
+                {t('inspector.metricRoleUnset')}
+              </button>
+              <button
+                type="button"
+                className={metricRoleChoiceClass(currentMetricRole === 'controllable_input')}
+                onClick={() =>
+                  setKpiMetricRole(activePerspectiveId, kpi.id, 'controllable_input')
+                }
+              >
+                {t('inspector.metricRoleInput')}
+              </button>
+              <button
+                type="button"
+                className={metricRoleChoiceClass(currentMetricRole === 'output')}
+                onClick={() => setKpiMetricRole(activePerspectiveId, kpi.id, 'output')}
+              >
+                {t('inspector.metricRoleOutput')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md border border-emerald-900/50 bg-emerald-950/40 p-3 text-[11px] leading-relaxed text-emerald-200/90">
+            {t('inspector.metricRoleNeedPerspective')}
+          </div>
+        )}
         <div>
           <label className="label">{t('inspector.primaryCategory')}</label>
           <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
@@ -409,6 +528,13 @@ export function KpiInspector() {
       </div>
     </aside>
   );
+}
+
+function metricRoleChoiceClass(selected: boolean) {
+  return [
+    'btn text-xs !py-1.5',
+    selected ? '!bg-emerald-800 text-emerald-50' : 'btn-ghost',
+  ].join(' ');
 }
 
 function RelationBadge({

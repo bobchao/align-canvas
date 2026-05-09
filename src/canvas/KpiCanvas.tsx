@@ -54,6 +54,7 @@ export function KpiCanvas({
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
   const preferences = useGraphStore((s) => s.preferences);
+  const metricRoles = useGraphStore((s) => s.metricRoles);
   const highlightSeedId = useGraphStore((s) => s.highlightSeedId);
   const highlightCategoryColor = useGraphStore((s) => s.highlightCategoryColor);
   const searchOpen = useGraphStore((s) => s.searchOpen);
@@ -164,11 +165,20 @@ export function KpiCanvas({
     return computeHighlight(highlightSeedId, relations);
   }, [searchOpen, searchQuery, highlightCategoryColor, highlightSeedId, kpis, relations]);
 
+  const activePerspectiveId = preferences.activePerspectiveId;
+  const rolesForActivePerspective =
+    activePerspectiveId != null ? metricRoles[activePerspectiveId] : undefined;
+
   const nodes = useMemo<Node<KpiNodeData>[]>(() => {
     return kpis.map((k: KPI) => {
       const highlighted = highlight ? highlight.nodeIds.has(k.id) : false;
       const dimmed = highlight ? !highlighted : false;
       const isSelected = selectedKpiIds.includes(k.id);
+      const perspectiveActive = activePerspectiveId != null;
+      const metricRoleEffective =
+        perspectiveActive && rolesForActivePerspective
+          ? rolesForActivePerspective[k.id] ?? null
+          : null;
       return {
         id: k.id,
         type: 'kpi',
@@ -179,11 +189,20 @@ export function KpiCanvas({
           highlighted,
           dimmed,
           editing: selectedKpiId === k.id,
+          perspectiveActive,
+          metricRoleEffective,
         },
         className: dimmed ? 'kpi-dimmed' : undefined,
       };
     });
-  }, [kpis, highlight, selectedKpiId, selectedKpiIds]);
+  }, [
+    kpis,
+    highlight,
+    selectedKpiId,
+    selectedKpiIds,
+    activePerspectiveId,
+    rolesForActivePerspective,
+  ]);
 
   const edges = useMemo<Edge<RelationEdgeData>[]>(() => {
     const positionMap = new Map(

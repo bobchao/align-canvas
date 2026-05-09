@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGraphStore } from '../store/useGraphStore';
 import type { Relation, RelationDirection, RelationStrength } from '../types';
@@ -11,10 +11,28 @@ interface Props {
 }
 
 export function RelationEditor({ relationId, onClose }: Props) {
+  const relations = useGraphStore((s) => s.relations);
+
+  const editing: Relation | undefined = useMemo(() => {
+    if (!relationId) return undefined;
+    return relations.find((r) => r.id === relationId);
+  }, [relationId, relations]);
+
+  if (!editing) return null;
+
+  return <RelationEditorBody key={editing.id} relation={editing} onClose={onClose} />;
+}
+
+function RelationEditorBody({
+  relation,
+  onClose,
+}: {
+  relation: Relation;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const updateRelation = useGraphStore((s) => s.updateRelation);
   const removeRelation = useGraphStore((s) => s.removeRelation);
-  const relations = useGraphStore((s) => s.relations);
   const kpis = useGraphStore((s) => s.kpis);
 
   const directionOptions: Array<{ value: RelationDirection; label: string; desc: string }> = [
@@ -27,49 +45,32 @@ export function RelationEditor({ relationId, onClose }: Props) {
     { value: 'indirect', label: t('relationEditor.indirect'), desc: t('relationEditor.indirectDesc') },
   ];
 
-  const editing: Relation | undefined = useMemo(() => {
-    if (!relationId) return undefined;
-    return relations.find((r) => r.id === relationId);
-  }, [relationId, relations]);
+  const [direction, setDirection] = useState<RelationDirection>(relation.direction);
+  const [strength, setStrength] = useState<RelationStrength>(relation.strength);
+  const [note, setNote] = useState(relation.note ?? '');
 
-  const [direction, setDirection] = useState<RelationDirection>('positive');
-  const [strength, setStrength] = useState<RelationStrength>('direct');
-  const [note, setNote] = useState('');
-
-  useEffect(() => {
-    if (editing) {
-      setDirection(editing.direction);
-      setStrength(editing.strength);
-      setNote(editing.note ?? '');
-    }
-  }, [editing]);
-
-  if (!editing) return null;
-
-  const sourceKpi =
-    kpis.find((k) => k.id === editing.sourceId);
-  const targetKpi =
-    kpis.find((k) => k.id === editing.targetId);
+  const sourceKpi = kpis.find((k) => k.id === relation.sourceId);
+  const targetKpi = kpis.find((k) => k.id === relation.targetId);
 
   const setDirectionAndSave = (value: RelationDirection) => {
     setDirection(value);
-    updateRelation(editing.id, { direction: value });
+    updateRelation(relation.id, { direction: value });
   };
 
   const setStrengthAndSave = (value: RelationStrength) => {
     setStrength(value);
-    updateRelation(editing.id, { strength: value });
+    updateRelation(relation.id, { strength: value });
   };
 
   const commitNote = (nextNote: string) => {
     const trimmed = nextNote.trim();
     const normalized = trimmed || undefined;
-    if ((editing.note ?? undefined) === normalized) return;
-    updateRelation(editing.id, { note: normalized });
+    if ((relation.note ?? undefined) === normalized) return;
+    updateRelation(relation.id, { note: normalized });
   };
 
   const handleDelete = () => {
-    removeRelation(editing.id);
+    removeRelation(relation.id);
     toast('success', t('relationEditor.toast.deleted'));
     onClose();
   };

@@ -8,19 +8,23 @@ import {
   orderedCategoryColorsForDisplay,
 } from '../lib/kpiCategory';
 import { useGraphStore } from '../store/useGraphStore';
-import type { KPI } from '../types';
+import type { KPI, MetricRole } from '../types';
 
 export interface KpiNodeData extends Record<string, unknown> {
   kpi: KPI;
   highlighted: boolean;
   dimmed: boolean;
   editing: boolean;
+  /** 已選部門／視角時為 true，此時才渲染 Input/Output／未標記 */
+  perspectiveActive: boolean;
+  /** 目前視角下的角色；`null` 為未標記 */
+  metricRoleEffective: MetricRole | null;
 }
 
 function KpiNodeImpl(props: NodeProps) {
   const { t } = useTranslation();
   const data = props.data as KpiNodeData;
-  const { kpi, highlighted, editing } = data;
+  const { kpi, highlighted, editing, perspectiveActive, metricRoleEffective } = data;
   const selected = props.selected;
   const color = kpiDisplayColor(kpi);
   const secondaryN = kpiSecondaryCount(kpi);
@@ -68,6 +72,9 @@ function KpiNodeImpl(props: NodeProps) {
           <div className="truncate text-sm font-semibold text-emerald-50">
             {kpi.name}
           </div>
+          {perspectiveActive ? (
+            <MetricRoleBadge role={metricRoleEffective} />
+          ) : null}
           {!showKpiCategoryLabels && secondaryN > 0 ? (
             <span
               className="shrink-0 rounded bg-emerald-800/80 px-1.5 text-[10px] font-medium text-emerald-200"
@@ -108,6 +115,38 @@ function KpiNodeImpl(props: NodeProps) {
         />
       ))}
     </div>
+  );
+}
+
+function MetricRoleBadge({ role }: { role: MetricRole | null }) {
+  const { t } = useTranslation();
+  if (role === 'controllable_input') {
+    return (
+      <span
+        className="shrink-0 rounded bg-sky-600/95 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white"
+        title={t('node.metricRole.inputTitle')}
+      >
+        {t('node.metricRole.inputShort')}
+      </span>
+    );
+  }
+  if (role === 'output') {
+    return (
+      <span
+        className="shrink-0 rounded bg-amber-600/95 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white"
+        title={t('node.metricRole.outputTitle')}
+      >
+        {t('node.metricRole.outputShort')}
+      </span>
+    );
+  }
+  return (
+    <span
+      className="shrink-0 rounded border border-slate-500/55 bg-transparent px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-emerald-500/95"
+      title={t('node.metricRole.noneTitle')}
+    >
+      {t('node.metricRole.noneShort')}
+    </span>
   );
 }
 

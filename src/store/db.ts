@@ -1,9 +1,15 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { KPI, Preferences, Relation } from '../types';
+import type {
+  KPI,
+  Perspective,
+  PerspectiveMetricRoles,
+  Preferences,
+  Relation,
+} from '../types';
 import { DEFAULT_PREFERENCES } from '../types';
 
 const DB_NAME = 'align-canvas-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const KPI_STORE = 'kpis';
 const REL_STORE = 'relations';
@@ -35,21 +41,31 @@ export interface PersistedState {
   relations: Relation[];
   preferences: Preferences;
   colorNames: Record<string, string>;
+  perspectives: Perspective[];
+  metricRoles: PerspectiveMetricRoles;
 }
 
 export async function loadPersistedState(): Promise<PersistedState> {
   const db = await getDb();
-  const [kpis, relations, preferences, colorNames] = await Promise.all([
-    db.getAll(KPI_STORE) as Promise<KPI[]>,
-    db.getAll(REL_STORE) as Promise<Relation[]>,
-    db.get(META_STORE, 'preferences') as Promise<Preferences | undefined>,
-    db.get(META_STORE, 'colorNames') as Promise<Record<string, string> | undefined>,
-  ]);
+  const [kpis, relations, preferences, colorNames, perspectives, metricRoles] =
+    await Promise.all([
+      db.getAll(KPI_STORE) as Promise<KPI[]>,
+      db.getAll(REL_STORE) as Promise<Relation[]>,
+      db.get(META_STORE, 'preferences') as Promise<Preferences | undefined>,
+      db.get(META_STORE, 'colorNames') as Promise<Record<string, string> | undefined>,
+      db.get(META_STORE, 'perspectives') as Promise<Perspective[] | undefined>,
+      db.get(META_STORE, 'metricRoles') as Promise<PerspectiveMetricRoles | undefined>,
+    ]);
   return {
     kpis,
     relations,
     preferences: { ...DEFAULT_PREFERENCES, ...preferences },
     colorNames: colorNames ?? {},
+    perspectives: Array.isArray(perspectives) ? perspectives : [],
+    metricRoles:
+      metricRoles && typeof metricRoles === 'object' && !Array.isArray(metricRoles)
+        ? metricRoles
+        : {},
   };
 }
 
@@ -66,6 +82,8 @@ export async function savePersistedState(state: PersistedState): Promise<void> {
   for (const r of state.relations) await relStore.put(r);
   await metaStore.put(state.preferences, 'preferences');
   await metaStore.put(state.colorNames, 'colorNames');
+  await metaStore.put(state.perspectives, 'perspectives');
+  await metaStore.put(state.metricRoles, 'metricRoles');
   await metaStore.put(Date.now(), 'lastSavedAt');
   await tx.done;
 }

@@ -26,13 +26,44 @@ export interface Relation {
   createdAt: number;
 }
 
-export interface GraphSnapshot {
-  version: 1;
+export type MetricRole = 'controllable_input' | 'output';
+
+export interface Perspective {
+  id: string;
+  name: string;
+}
+
+/** Sparse: perspectiveId -> kpiId -> role（未出現視為未標記） */
+export type PerspectiveMetricRoles = Record<string, Record<string, MetricRole>>;
+
+/** 匯入解析結果（v1 檔解析後 perspectives／metricRoles 為空） */
+export interface ParsedImport {
   kpis: KPI[];
   relations: Relation[];
-  colorNames?: Record<string, string>;
-  exportedAt: number;
+  colorNames: Record<string, string>;
+  perspectives: Perspective[];
+  metricRoles: PerspectiveMetricRoles;
 }
+
+export const GRAPH_SNAPSHOT_VERSION = 2 as const;
+
+export type GraphSnapshot =
+  | {
+      version: 1;
+      kpis: KPI[];
+      relations: Relation[];
+      colorNames?: Record<string, string>;
+      exportedAt: number;
+    }
+  | {
+      version: typeof GRAPH_SNAPSHOT_VERSION;
+      kpis: KPI[];
+      relations: Relation[];
+      colorNames?: Record<string, string>;
+      perspectives: Perspective[];
+      metricRoles: PerspectiveMetricRoles;
+      exportedAt: number;
+    };
 
 export interface Preferences {
   layoutDirection: 'LR' | 'TB';
@@ -40,6 +71,8 @@ export interface Preferences {
   edgeRoutingMode: 'bezier' | 'smoothstep' | 'step';
   /** 在節點上顯示所屬分類名稱（主優先、其餘依 palette 順序） */
   showKpiCategoryLabels: boolean;
+  /** 僅在本機 persisted；決定是否在畫布上編輯／顯示視角標記 */
+  activePerspectiveId: string | null;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -47,6 +80,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   layoutSpacingPreset: 'comfortable',
   edgeRoutingMode: 'smoothstep',
   showKpiCategoryLabels: false,
+  activePerspectiveId: null,
 };
 
 export const KPI_COLOR_PALETTE = [

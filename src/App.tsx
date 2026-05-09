@@ -25,6 +25,8 @@ export default function App() {
   const kpis = useGraphStore((s) => s.kpis);
   const relations = useGraphStore((s) => s.relations);
   const colorNames = useGraphStore((s) => s.colorNames);
+  const perspectives = useGraphStore((s) => s.perspectives);
+  const metricRoles = useGraphStore((s) => s.metricRoles);
   const replaceAll = useGraphStore((s) => s.replaceAll);
   const addKpi = useGraphStore((s) => s.addKpi);
   const addRelation = useGraphStore((s) => s.addRelation);
@@ -191,7 +193,10 @@ export default function App() {
           }}
           onMerge={() => {
             if (!importPreview) return;
-            const merged = mergeImports({ kpis, relations, colorNames }, importPreview);
+            const merged = mergeImports(
+              { kpis, relations, colorNames, perspectives, metricRoles },
+              importPreview,
+            );
             replaceAll(merged, t('app.historyLabel.importMerge'));
             toast('success', t('app.toast.importMerge'));
             setImportPreview(null);
@@ -209,6 +214,8 @@ export default function App() {
               relations: local.relations,
               preferences: local.preferences,
               colorNames: local.colorNames,
+              perspectives: local.perspectives,
+              metricRoles: local.metricRoles,
             });
             toast('info', t('app.toast.keptLocal'));
           }}

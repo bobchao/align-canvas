@@ -62,7 +62,10 @@
       "noData": "目前沒有資料可匯出",
       "exported": "已匯出 JSON",
       "relayout": "已重新排版"
-    }
+    },
+    "metricPerspectiveBadge": "視角：{{name}}",
+    "metricPerspectiveUnset": "尚未選定視角",
+    "noMetricPerspectiveHint": "在設定中選定部門／視角後，才能標示 Controllable Input 與 Output"
   },
   "inspector": {
     "noSelection": "尚未選取指標",
@@ -97,11 +100,20 @@
       "directChar": "直",
       "indirectChar": "間"
     },
+    "metricRoleTitle": "在此視角下的角色",
+    "metricRoleScopeHint": "以下為「{{name}}」視角專屬標記，不會覆蓋其他視角，也不是全公司唯一的定義。",
+    "metricRoleUnset": "未標記",
+    "metricRoleInput": "Controllable Input",
+    "metricRoleOutput": "Output",
+    "metricRoleNeedPerspective": "若要標示 Controllable Input 或 Output，請先到「設定」新增部門／視角，並選定您目前使用的視角。",
+    "metricRoleNeedPerspectiveMulti": "尚未選定視角。請開啟設定，選好部門／視角後即可一次為多個指標套用角色。",
     "toast": {
       "nameEmpty": "名稱不能為空",
       "deleted": "已刪除 {{name}}（可用 Cmd+Z 還原）",
       "primaryCategoryWarning": "此為主分類，請先變更上方主分類色。",
-      "colorsUpdated": "已更新 {{count}} 個指標分類"
+      "colorsUpdated": "已更新 {{count}} 個指標分類",
+      "metricRolesBatchSet": "已為 {{count}} 個指標設定角色（此視角）",
+      "metricRolesBatchUnset": "已將 {{count}} 個指標改為未標記（此視角）"
     }
   },
   "relationEditor": {
@@ -180,7 +192,23 @@
     "edgeStep": "Step（直角）",
     "edgeBezier": "Bezier（曲線）",
     "categoryNaming": "分類命名",
-    "language": "語言"
+    "language": "語言",
+    "perspectiveSectionTitle": "部門／視角（Controllable Input / Output）",
+    "perspectiveSectionIntro": "先有視角，再在畫布上標記各指標在您部門觀點下是「可自行施力的 Input」或「成果型 Output」。同一份 Canvas 裡，不同視角各自保存、互不干擾。",
+    "activePerspectiveSelect": "目前使用的視角",
+    "neutralPerspective": "不偏不倚（不顯示或編輯標記）",
+    "perspectiveEditingHint": "您正在檢視與編輯目前視角專屬的標記；切換視角後，畫面會顯示該視角的結果。",
+    "perspectiveNeutralExplanation": "維持不偏不倚時，畫布不會顯示 Input/Output，也無法編輯這些角色。",
+    "perspectiveNeutralWhenEmpty": "尚未建立任何視角。請先在下方新增視角，再在這裡選定。",
+    "perspectiveDefinitions": "視角清單（可新增、重新命名或刪除）",
+    "newPerspectivePlaceholder": "例如：Growth、Fleet、BD…",
+    "addPerspective": "新增視角",
+    "noPerspectivesYet": "尚無視角。新增後即可在工具列看到目前狀態，並於畫布標記指標。",
+    "perspectiveOnboardingToast": "已啟用視角標記：接下來的 Input/Output 只會套用到您剛選定的視角；其他視角需切換後另行編輯。",
+    "perspectiveAdded": "已新增視角「{{name}}」",
+    "confirmRemovePerspective": "確定要移除視角「{{name}}」嗎？將一併刪除此視角下所有指標的 Input/Output 標記。",
+    "perspectiveRemoved": "已移除視角",
+    "removePerspectiveAriaLabel": "移除視角 {{name}}"
   },
   "searchBar": {
     "placeholder": "搜尋節點與附註",
@@ -194,7 +222,15 @@
   },
   "node": {
     "categoryPrefix": "分類：",
-    "hasOtherCategories": "另有其他歸屬分類"
+    "hasOtherCategories": "另有其他歸屬分類",
+    "metricRole": {
+      "inputShort": "Input",
+      "inputTitle": "在此視角為 Controllable Input",
+      "outputShort": "Output",
+      "outputTitle": "在此視角為 Output",
+      "noneShort": "—",
+      "noneTitle": "在此視角尚未標記"
+    }
   },
   "shortcuts": {
     "confirmDeleteMultiple": "確定要刪除這 {{count}} 個節點嗎？\n相關連線也會一併刪除（可用 Cmd/Ctrl+Z 復原）。",

@@ -1,4 +1,4 @@
-import { FileInput, MoveHorizontal, MoveVertical, X } from 'lucide-react';
+import { FileInput, MoveHorizontal, MoveVertical, Plus, Trash2, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGraphStore } from '../store/useGraphStore';
@@ -17,14 +17,53 @@ const SUPPORTED_LANGUAGES = [
   { code: 'zh-TW', label: '繁體中文' },
 ] as const;
 
+const PERSPECTIVE_ONBOARD_LS_KEY = 'align-canvas-perspective-onboarding-toast';
+
 export function SettingsPanel({ onClose, onImportChoice }: Props) {
   const { t } = useTranslation();
   const preferences = useGraphStore((s) => s.preferences);
   const setPreferences = useGraphStore((s) => s.setPreferences);
+  const perspectives = useGraphStore((s) => s.perspectives);
+  const addPerspective = useGraphStore((s) => s.addPerspective);
+  const renamePerspective = useGraphStore((s) => s.renamePerspective);
+  const removePerspective = useGraphStore((s) => s.removePerspective);
+  const setActivePerspectiveId = useGraphStore((s) => s.setActivePerspectiveId);
   const colorNames = useGraphStore((s) => s.colorNames);
   const setColorName = useGraphStore((s) => s.setColorName);
   const [colorNameDrafts, setColorNameDrafts] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [newPerspectiveName, setNewPerspectiveName] = useState('');
+  const [nameDraftByPerspectiveId, setNameDraftByPerspectiveId] = useState<Record<string, string>>(
+    {},
+  );
+
+  const handleActivePerspectiveChange = (value: string) => {
+    const nextId = value === '' ? null : value;
+    const prevId = preferences.activePerspectiveId;
+    setActivePerspectiveId(nextId);
+    if (
+      nextId &&
+      prevId == null &&
+      typeof window !== 'undefined' &&
+      !localStorage.getItem(PERSPECTIVE_ONBOARD_LS_KEY)
+    ) {
+      toast('info', t('settings.perspectiveOnboardingToast'));
+      localStorage.setItem(PERSPECTIVE_ONBOARD_LS_KEY, '1');
+    }
+  };
+
+  const handleTryAddPerspective = () => {
+    const created = addPerspective(newPerspectiveName);
+    if (!created) return;
+    setNewPerspectiveName('');
+    toast('success', t('settings.perspectiveAdded', { name: created.name }));
+  };
+
+  const handleRemovePerspective = (id: string, displayName: string) => {
+    if (!window.confirm(t('settings.confirmRemovePerspective', { name: displayName }))) return;
+    removePerspective(id);
+    toast('success', t('settings.perspectiveRemoved'));
+  };
 
   const handleFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,6 +129,103 @@ export function SettingsPanel({ onClose, onImportChoice }: Props) {
               <option key={code} value={code}>{label}</option>
             ))}
           </select>
+        </section>
+
+        <section>
+          <div className="label">{t('settings.perspectiveSectionTitle')}</div>
+          <p className="mb-2 text-xs leading-relaxed text-emerald-200/85">
+            {t('settings.perspectiveSectionIntro')}
+          </p>
+          <label className="label !mb-1 !text-[10px]">{t('settings.activePerspectiveSelect')}</label>
+          <select
+            className="input mb-3"
+            value={preferences.activePerspectiveId ?? ''}
+            onChange={(e) => handleActivePerspectiveChange(e.target.value)}
+            disabled={perspectives.length === 0}
+          >
+            <option value="">{t('settings.neutralPerspective')}</option>
+            {perspectives.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          {preferences.activePerspectiveId ? (
+            <p className="mb-3 rounded-md border border-emerald-800/70 bg-emerald-950/50 px-2 py-1.5 text-[11px] leading-relaxed text-emerald-200/90">
+              {t('settings.perspectiveEditingHint')}
+            </p>
+          ) : perspectives.length === 0 ? (
+            <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {t('settings.perspectiveNeutralWhenEmpty')}
+            </p>
+          ) : (
+            <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {t('settings.perspectiveNeutralExplanation')}
+            </p>
+          )}
+
+          <div className="label !mb-1 !text-[10px]">{t('settings.perspectiveDefinitions')}</div>
+          <div className="mb-3 flex gap-2">
+            <input
+              className="input min-w-0 flex-1 text-sm"
+              placeholder={t('settings.newPerspectivePlaceholder')}
+              value={newPerspectiveName}
+              onChange={(e) => setNewPerspectiveName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleTryAddPerspective();
+                }
+              }}
+            />
+            <button type="button" className="btn shrink-0" onClick={handleTryAddPerspective}>
+              <Plus size={14} />
+              {t('settings.addPerspective')}
+            </button>
+          </div>
+          {perspectives.length === 0 ? (
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('settings.noPerspectivesYet')}</p>
+          ) : (
+            <ul className="max-h-[220px] space-y-1.5 overflow-y-auto rounded-md border border-slate-200 p-2 dark:border-slate-800">
+              {perspectives.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-emerald-900/35"
+                >
+                  <input
+                    className="input min-w-0 flex-1 !h-9 text-xs"
+                    value={nameDraftByPerspectiveId[p.id] ?? p.name}
+                    onChange={(e) =>
+                      setNameDraftByPerspectiveId((prev) => ({
+                        ...prev,
+                        [p.id]: e.target.value,
+                      }))
+                    }
+                    onBlur={() => {
+                      const raw = nameDraftByPerspectiveId[p.id] ?? p.name;
+                      const next = raw.trim();
+                      setNameDraftByPerspectiveId((prev) => {
+                        const rest = { ...prev };
+                        delete rest[p.id];
+                        return rest;
+                      });
+                      if (!next) return;
+                      renamePerspective(p.id, next);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-ghost shrink-0 !p-2 text-slate-500 hover:!text-rose-600 dark:text-slate-400"
+                    onClick={() => handleRemovePerspective(p.id, nameDraftByPerspectiveId[p.id] ?? p.name)}
+                    aria-label={t('settings.removePerspectiveAriaLabel', { name: p.name })}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section>

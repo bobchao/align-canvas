@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import type {
   KPI,
+  MetricRole,
+  Perspective,
+  PerspectiveMetricRoles,
   Preferences,
   Relation,
   RelationDirection,
@@ -23,6 +26,8 @@ interface GraphState {
   relations: Relation[];
   preferences: Preferences;
   colorNames: Record<string, string>;
+  perspectives: Perspective[];
+  metricRoles: PerspectiveMetricRoles;
 
   /** UI-only: currently highlighted seed */
   highlightSeedId: string | null;
@@ -54,9 +59,23 @@ interface GraphState {
     relations: Relation[];
     preferences: Preferences;
     colorNames?: Record<string, string>;
+    perspectives?: Perspective[];
+    metricRoles?: PerspectiveMetricRoles;
   }): void;
 
   setPreferences(patch: Partial<Preferences>): void;
+  setActivePerspectiveId(id: string | null): void;
+
+  addPerspective(name: string): Perspective | null;
+  renamePerspective(id: string, name: string): void;
+  removePerspective(id: string): void;
+
+  setKpiMetricRole(perspectiveId: string, kpiId: string, role: MetricRole | null): void;
+  setKpiMetricRolesForKpis(
+    perspectiveId: string,
+    kpiIds: string[],
+    role: MetricRole | null,
+  ): void;
 
   addKpi(input: { name: string; note?: string; color?: string }): KPI;
   batchAddKpis(names: string[], defaultColor?: string): KPI[];
@@ -93,7 +112,13 @@ interface GraphState {
 
   /** imperative replacement used by import */
   replaceAll(
-    payload: { kpis: KPI[]; relations: Relation[]; colorNames?: Record<string, string> },
+    payload: {
+      kpis: KPI[];
+      relations: Relation[];
+      colorNames?: Record<string, string>;
+      perspectives?: Perspective[];
+      metricRoles?: PerspectiveMetricRoles;
+    },
     label?: string,
   ): void;
 
@@ -166,6 +191,40 @@ function findNonOverlappingPosition(
   return { x: start.x, y: maxY + stepY };
 }
 
+function cloneMetricRoles(mr: PerspectiveMetricRoles): PerspectiveMetricRoles {
+  return JSON.parse(JSON.stringify(mr)) as PerspectiveMetricRoles;
+}
+
+function stripKpiIdFromMetricRoles(
+  mr: PerspectiveMetricRoles,
+  kpiId: string,
+): PerspectiveMetricRoles {
+  const next: PerspectiveMetricRoles = { ...mr };
+  for (const pid of Object.keys(next)) {
+    const map = next[pid];
+    if (map && kpiId in map) {
+      const copy = { ...map };
+      delete copy[kpiId];
+      next[pid] = copy;
+    }
+  }
+  return next;
+}
+
+function normalizeActivePerspective(
+  preferences: Preferences,
+  perspectives: Perspective[],
+): Preferences {
+  const id = preferences.activePerspectiveId;
+  if (id == null || id === '') {
+    return { ...preferences, activePerspectiveId: null };
+  }
+  if (!perspectives.some((p) => p.id === id)) {
+    return { ...preferences, activePerspectiveId: null };
+  }
+  return preferences;
+}
+
 export const useGraphStore = create<GraphState>((set, get) => {
   /** push a history entry and clear the redo stack */
   const pushHistory = (entry: HistoryEntry) => {
@@ -180,6 +239,8 @@ export const useGraphStore = create<GraphState>((set, get) => {
     relations: [],
     preferences: DEFAULT_PREFERENCES,
     colorNames: {},
+    perspectives: [],
+    metricRoles: {},
     highlightSeedId: null,
     highlightCategoryColor: null,
     selectedKpiId: null,
@@ -192,12 +253,18 @@ export const useGraphStore = create<GraphState>((set, get) => {
     past: [],
     future: [],
 
-    hydrate({ kpis, relations, preferences, colorNames = {} }) {
+    hydrate({ kpis, relations, preferences, colorNames = {}, perspectives = [], metricRoles = {} }) {
+      const mergedPrefs = normalizeActivePerspective(
+        { ...DEFAULT_PREFERENCES, ...preferences },
+        perspectives,
+      );
       set({
         kpis: normalizeKpisDefaultPrimary(kpis),
         relations,
-        preferences: { ...DEFAULT_PREFERENCES, ...preferences },
+        preferences: mergedPrefs,
         colorNames,
+        perspectives,
+        metricRoles: cloneMetricRoles(metricRoles),
         hydrated: true,
         past: [],
         future: [],
@@ -207,7 +274,133 @@ export const useGraphStore = create<GraphState>((set, get) => {
     },
 
     setPreferences(patch) {
-      set((s) => ({ preferences: { ...s.preferences, ...patch } }));
+      set((s) => ({
+        preferences: normalizeActivePerspective(
+          { ...s.preferences, ...patch },
+          s.perspectives,
+        ),
+      }));
+    },
+
+    setActivePerspectiveId(id) {
+      set((s) => ({
+        preferences: normalizeActivePerspective(
+          { ...s.preferences, activePerspectiveId: id },
+          s.perspectives,
+        ),
+      }));
+    },
+
+    addPerspective(name) {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      const p: Perspective = { id: newId('per'), name: trimmed };
+      const apply = () => set((s) => ({ perspectives: [...s.perspectives, p] }));
+      const revert = () =>
+        set((s) => ({
+          perspectives: s.perspectives.filter((x) => x.id !== p.id),
+        }));
+      apply();
+      pushHistory({ label: `新增視角 ${p.name}`, undo: revert, redo: apply });
+      return p;
+    },
+
+    renamePerspective(id, name) {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const prevList = get().perspectives;
+      const before = prevList.find((x) => x.id === id);
+      if (!before || before.name === trimmed) return;
+      const nextList = prevList.map((x) =>
+        x.id === id ? { ...x, name: trimmed } : x,
+      );
+      const apply = () => set({ perspectives: nextList });
+      const revert = () => set({ perspectives: prevList });
+      apply();
+      pushHistory({ label: `重新命名視角`, undo: revert, redo: apply });
+    },
+
+    removePerspective(id) {
+      const prevList = get().perspectives;
+      const prevMr = get().metricRoles;
+      const prevPrefs = get().preferences;
+      if (!prevList.some((x) => x.id === id)) return;
+      const nextList = prevList.filter((x) => x.id !== id);
+      const nextMr = { ...prevMr };
+      delete nextMr[id];
+      const wasActive = prevPrefs.activePerspectiveId === id;
+      const apply = () =>
+        set((s) => ({
+          perspectives: nextList,
+          metricRoles: nextMr,
+          preferences: wasActive
+            ? { ...s.preferences, activePerspectiveId: null }
+            : s.preferences,
+        }));
+      const revert = () =>
+        set({
+          perspectives: prevList,
+          metricRoles: prevMr,
+          preferences: prevPrefs,
+        });
+      apply();
+      pushHistory({ label: '移除視角', undo: revert, redo: apply });
+    },
+
+    setKpiMetricRole(perspectiveId, kpiId, role) {
+      const beforeMr = cloneMetricRoles(get().metricRoles);
+      const innerBefore = { ...(beforeMr[perspectiveId] ?? {}) };
+      const innerAfter = { ...innerBefore };
+      if (role == null) {
+        delete innerAfter[kpiId];
+      } else {
+        innerAfter[kpiId] = role;
+      }
+      const nextMr: PerspectiveMetricRoles = { ...beforeMr };
+      if (Object.keys(innerAfter).length === 0) {
+        delete nextMr[perspectiveId];
+      } else {
+        nextMr[perspectiveId] = innerAfter;
+      }
+
+      const apply = () => set({ metricRoles: nextMr });
+      const revert = () => set({ metricRoles: beforeMr });
+      apply();
+      pushHistory({
+        label: '更新指標角色',
+        undo: revert,
+        redo: apply,
+      });
+    },
+
+    setKpiMetricRolesForKpis(perspectiveId, kpiIds, role) {
+      const unique = Array.from(new Set(kpiIds));
+      if (unique.length === 0) return;
+      const beforeMr = cloneMetricRoles(get().metricRoles);
+      const innerBefore = { ...(beforeMr[perspectiveId] ?? {}) };
+      const innerAfter = { ...innerBefore };
+      for (const kpiId of unique) {
+        if (role == null) {
+          delete innerAfter[kpiId];
+        } else {
+          innerAfter[kpiId] = role;
+        }
+      }
+      const nextMr: PerspectiveMetricRoles = { ...beforeMr };
+      if (Object.keys(innerAfter).length === 0) {
+        delete nextMr[perspectiveId];
+      } else {
+        nextMr[perspectiveId] = innerAfter;
+      }
+
+      const apply = () => set({ metricRoles: nextMr });
+      const revert = () => set({ metricRoles: beforeMr });
+      apply();
+      pushHistory({
+        label: `批次更新 ${unique.length} 個指標角色`,
+        undo: revert,
+        redo: apply,
+      });
     },
 
     addKpi({ name, note, color }) {
@@ -308,6 +501,8 @@ export const useGraphStore = create<GraphState>((set, get) => {
       const affectedRelations = state.relations.filter(
         (r) => r.sourceId === id || r.targetId === id,
       );
+      const metricRolesBefore = cloneMetricRoles(state.metricRoles);
+      const metricRolesAfter = stripKpiIdFromMetricRoles(metricRolesBefore, id);
       const apply = () =>
         set((s) => {
           const nextKpis = s.kpis.filter((node) => node.id !== id);
@@ -317,6 +512,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
           return {
             kpis: nextKpis,
             relations: s.relations.filter((r) => r.sourceId !== id && r.targetId !== id),
+            metricRoles: metricRolesAfter,
             selectedKpiId: s.selectedKpiId === id ? null : s.selectedKpiId,
             selectedKpiIds: s.selectedKpiIds.filter((x) => x !== id),
             highlightSeedId: s.highlightSeedId === id ? null : s.highlightSeedId,
@@ -331,6 +527,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
         set((s) => ({
           kpis: [...s.kpis, kpi],
           relations: [...s.relations, ...affectedRelations],
+          metricRoles: metricRolesBefore,
         }));
       apply();
       pushHistory({
@@ -535,7 +732,13 @@ export const useGraphStore = create<GraphState>((set, get) => {
       set({
         kpis: [],
         relations: [],
-        preferences: { ...DEFAULT_PREFERENCES, ...local.preferences },
+        preferences: normalizeActivePerspective(
+          { ...DEFAULT_PREFERENCES, ...local.preferences },
+          local.perspectives ?? [],
+        ),
+        colorNames: local.colorNames ?? {},
+        perspectives: local.perspectives ?? [],
+        metricRoles: cloneMetricRoles(local.metricRoles ?? {}),
         urlImportConflict: { remote, local: local },
         hydrated: true,
         past: [],
@@ -548,28 +751,46 @@ export const useGraphStore = create<GraphState>((set, get) => {
       });
     },
 
-    replaceAll({ kpis, relations, colorNames }, label = '匯入資料') {
+    replaceAll(
+      {
+        kpis,
+        relations,
+        colorNames,
+        perspectives: nextPerspectives = [],
+        metricRoles: nextMetricRoles = {},
+      },
+      label = '匯入資料',
+    ) {
       const prev = {
         kpis: get().kpis,
         relations: get().relations,
         colorNames: get().colorNames,
+        perspectives: get().perspectives,
+        metricRoles: get().metricRoles,
+        preferences: get().preferences,
       };
       const apply = () =>
-        set({
+        set((s) => ({
           kpis: normalizeKpisDefaultPrimary(kpis),
           relations,
           colorNames: colorNames ?? {},
+          perspectives: nextPerspectives,
+          metricRoles: cloneMetricRoles(nextMetricRoles),
+          preferences: normalizeActivePerspective(s.preferences, nextPerspectives),
           selectedKpiId: null,
           selectedKpiIds: [],
           highlightSeedId: null,
           highlightCategoryColor: null,
           activeRelationId: null,
-        });
+        }));
       const revert = () =>
         set({
           kpis: prev.kpis,
           relations: prev.relations,
           colorNames: prev.colorNames,
+          perspectives: prev.perspectives,
+          metricRoles: prev.metricRoles,
+          preferences: prev.preferences,
         });
       apply();
       pushHistory({ label, undo: revert, redo: apply });
