@@ -10,6 +10,7 @@ import {
 import { toast } from '../ui/Toast';
 import { useGraphStore } from './useGraphStore';
 import { debounce, loadPersistedState, savePersistedState } from './db';
+import i18n from '../i18n';
 
 /**
  * Hook that hydrates the store from IndexedDB on mount and writes back
@@ -29,7 +30,7 @@ export function usePersistence() {
 
         if (importParam) {
           if (!isSafeRemoteUrlForFetch(importParam)) {
-            toast('error', '不支援的網址，請使用 http 或 https 的 JSON 連結');
+            toast('error', i18n.t('persistence.unsupportedUrl'));
             useGraphStore.getState().hydrate(persisted);
             removeUrlImportParamFromAddressBar();
             return;
@@ -52,7 +53,7 @@ export function usePersistence() {
             }
             removeUrlImportParamFromAddressBar();
           } catch (err) {
-            const msg = err instanceof Error ? err.message : '無法從網址讀入 JSON';
+            const msg = err instanceof Error ? err.message : i18n.t('persistence.urlImportFailed');
             console.error('URL import failed', err);
             toast('error', msg);
             useGraphStore.getState().hydrate(persisted);

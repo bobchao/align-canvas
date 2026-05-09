@@ -1,5 +1,6 @@
 import { Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   categoryDisplayLabel,
   kpiDisplayColor,
@@ -10,6 +11,7 @@ import { KPI_COLOR_PALETTE } from '../types';
 import { toast } from '../ui/Toast';
 
 export function KpiInspector() {
+  const { t } = useTranslation();
   const selectedKpiId = useGraphStore((s) => s.selectedKpiId);
   const selectedKpiIds = useGraphStore((s) => s.selectedKpiIds);
   const setSelectedKpi = useGraphStore((s) => s.setSelectedKpi);
@@ -50,24 +52,24 @@ export function KpiInspector() {
         <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              多選模式
+              {t('inspector.multiMode')}
             </div>
             <div className="truncate font-semibold text-emerald-50">
-              已選取 {selectedKpis.length} 個指標
+              {t('inspector.selectedCount', { count: selectedKpis.length })}
             </div>
           </div>
           <button
             type="button"
             className="btn-ghost !p-1"
             onClick={() => setSelectedKpis([])}
-            aria-label="清除選取"
+            aria-label={t('inspector.clearSelectionAriaLabel')}
           >
             <X size={16} />
           </button>
         </header>
         <div className="space-y-4 p-4">
           <div>
-            <label className="label">批次設定分類顏色</label>
+            <label className="label">{t('inspector.batchSetColor')}</label>
             <div className="flex flex-wrap gap-2">
                 {KPI_COLOR_PALETTE.map((c) => (
                 <button
@@ -75,7 +77,7 @@ export function KpiInspector() {
                   type="button"
                   onClick={() => {
                     updateKpiColors(selectedKpiIds, c);
-                    toast('success', `已更新 ${selectedKpiIds.length} 個指標分類`);
+                    toast('success', t('inspector.toast.colorsUpdated', { count: selectedKpiIds.length }));
                   }}
                   className="h-6 w-6 rounded-full border-2 border-transparent transition hover:border-slate-900 dark:hover:border-white"
                   style={{ backgroundColor: c }}
@@ -85,7 +87,7 @@ export function KpiInspector() {
             </div>
           </div>
           <div>
-            <div className="label">已選取指標</div>
+            <div className="label">{t('inspector.selectedList')}</div>
             <ul className="max-h-[300px] space-y-1 overflow-y-auto">
               {selectedKpis.map((item) => (
                 <li
@@ -105,7 +107,7 @@ export function KpiInspector() {
                     onClick={() =>
                       setSelectedKpis(selectedKpiIds.filter((id) => id !== item.id))
                     }
-                    aria-label="移出選取"
+                    aria-label={t('inspector.removeFromSelectionAriaLabel')}
                   >
                     <X size={12} />
                   </button>
@@ -121,25 +123,25 @@ export function KpiInspector() {
   if (!kpi) {
     return (
       <aside className="panel w-[320px] shrink-0 p-4 text-sm text-emerald-200">
-        <div className="font-medium text-emerald-50">尚未選取指標</div>
+        <div className="font-medium text-emerald-50">{t('inspector.noSelection')}</div>
         <p className="mt-2 leading-relaxed">
-          點擊畫布上的任一 KPI 節點來編輯內容、Highlight 相關指標或刪除該項。
+          {t('inspector.noSelectionHint')}
         </p>
         <div className="mt-4 rounded-md bg-slate-50 p-3 text-xs leading-relaxed text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-          <div className="font-semibold text-slate-700 dark:text-slate-200">快捷鍵</div>
+          <div className="font-semibold text-slate-700 dark:text-slate-200">{t('inspector.shortcuts')}</div>
           <ul className="mt-2 space-y-1">
             <li>
-              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">F</kbd> 搜尋節點與附註
+              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">F</kbd> {t('inspector.shortcutSearch')}
             </li>
             <li>
-              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">Z</kbd> 復原
+              <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">Z</kbd> {t('inspector.shortcutUndo')}
             </li>
             <li>
               <kbd className="kbd">Cmd/Ctrl</kbd> + <kbd className="kbd">Shift</kbd> +{' '}
-              <kbd className="kbd">Z</kbd> 重做
+              <kbd className="kbd">Z</kbd> {t('inspector.shortcutRedo')}
             </li>
             <li>
-              <kbd className="kbd">Esc</kbd> 關閉搜尋／取消 Highlight
+              <kbd className="kbd">Esc</kbd> {t('inspector.shortcutEsc')}
             </li>
           </ul>
         </div>
@@ -153,7 +155,7 @@ export function KpiInspector() {
   const commitEdits = () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      toast('error', '名稱不能為空');
+      toast('error', t('inspector.toast.nameEmpty'));
       setName(kpi.name);
       return;
     }
@@ -169,7 +171,7 @@ export function KpiInspector() {
 
   const handleDelete = () => {
     removeKpi(kpi.id);
-    toast('success', `已刪除 ${kpi.name}（可用 Cmd+Z 還原）`);
+    toast('success', t('inspector.toast.deleted', { name: kpi.name }));
   };
 
   const primaryEffective = kpiEffectivePrimaryColor(kpi);
@@ -188,7 +190,7 @@ export function KpiInspector() {
 
   const toggleSecondary = (c: string) => {
     if (c === primaryEffective) {
-      toast('info', '此為主分類，請先變更上方主分類色。');
+      toast('info', t('inspector.toast.primaryCategoryWarning'));
       return;
     }
     if (secondaries.includes(c)) {
@@ -202,14 +204,14 @@ export function KpiInspector() {
     }
   };
 
-  const lookupName = (id: string) => kpis.find((x) => x.id === id)?.name ?? '(未知)';
+  const lookupName = (id: string) => kpis.find((x) => x.id === id)?.name ?? t('inspector.unknown');
 
   return (
     <aside className="panel flex w-[320px] shrink-0 flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            KPI 詳情
+            {t('inspector.kpiDetails')}
           </div>
           <div className="truncate font-semibold text-emerald-50">
             {kpi.name}
@@ -222,7 +224,7 @@ export function KpiInspector() {
             setSelectedKpi(null);
             setHighlightSeed(null);
           }}
-          aria-label="關閉"
+          aria-label={t('inspector.closeAriaLabel')}
         >
           <X size={16} />
         </button>
@@ -230,7 +232,7 @@ export function KpiInspector() {
 
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <div>
-          <label className="label">名稱</label>
+          <label className="label">{t('inspector.name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -242,7 +244,7 @@ export function KpiInspector() {
           />
         </div>
         <div>
-          <label className="label">備註</label>
+          <label className="label">{t('inspector.notes')}</label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -251,9 +253,9 @@ export function KpiInspector() {
           />
         </div>
         <div>
-          <label className="label">主分類</label>
+          <label className="label">{t('inspector.primaryCategory')}</label>
           <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
-            名稱可至「設定 → 分類命名」自訂。
+            {t('inspector.primaryCategoryHint')}
           </p>
           <div className="mb-2 flex items-center gap-2 text-sm text-emerald-100">
             <span
@@ -262,7 +264,7 @@ export function KpiInspector() {
               aria-hidden
             />
             <span>
-              目前主分類：<span className="font-semibold">{labelFor(primaryEffective)}</span>
+              {t('inspector.currentPrimary')}<span className="font-semibold">{labelFor(primaryEffective)}</span>
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -286,7 +288,7 @@ export function KpiInspector() {
         </div>
 
         <div>
-          <label className="label">次分類</label>
+          <label className="label">{t('inspector.secondaryCategories')}</label>
           <ul className="mt-1 max-h-40 space-y-0.5 overflow-y-auto rounded-md border border-slate-200 p-1.5 dark:border-slate-800">
             {KPI_COLOR_PALETTE.map((c) => {
               if (c === primaryEffective) {
@@ -301,7 +303,7 @@ export function KpiInspector() {
                       style={{ backgroundColor: c }}
                     />
                     <span className="line-through opacity-80">{labelFor(c)}</span>
-                    <span className="text-[10px]">（主分類）</span>
+                    <span className="text-[10px]">{t('inspector.isPrimary')}</span>
                   </li>
                 );
               }
@@ -332,9 +334,9 @@ export function KpiInspector() {
         </div>
 
         <section>
-          <div className="label">受哪些指標影響（{incoming.length}）</div>
+          <div className="label">{t('inspector.influencedBy', { count: incoming.length })}</div>
           {incoming.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400">尚無</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('inspector.noRelations')}</p>
           ) : (
             <ul className="space-y-1">
               {incoming.map((r) => (
@@ -353,7 +355,7 @@ export function KpiInspector() {
                     type="button"
                     className="btn-ghost !p-1 text-slate-400 hover:text-rose-600"
                     onClick={() => removeRelation(r.id)}
-                    aria-label="刪除關係"
+                    aria-label={t('inspector.deleteRelationAriaLabel')}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -364,9 +366,9 @@ export function KpiInspector() {
         </section>
 
         <section>
-          <div className="label">影響哪些指標（{outgoing.length}）</div>
+          <div className="label">{t('inspector.influences', { count: outgoing.length })}</div>
           {outgoing.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400">尚無</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('inspector.noRelations')}</p>
           ) : (
             <ul className="space-y-1">
               {outgoing.map((r) => (
@@ -385,7 +387,7 @@ export function KpiInspector() {
                     type="button"
                     className="btn-ghost !p-1 text-slate-400 hover:text-rose-600"
                     onClick={() => removeRelation(r.id)}
-                    aria-label="刪除關係"
+                    aria-label={t('inspector.deleteRelationAriaLabel')}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -401,7 +403,7 @@ export function KpiInspector() {
             className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
             onClick={handleDelete}
           >
-            <Trash2 size={14} /> 刪除
+            <Trash2 size={14} /> {t('inspector.delete')}
           </button>
         </div>
       </div>
@@ -416,10 +418,11 @@ function RelationBadge({
   direction: 'positive' | 'negative';
   strength: 'direct' | 'indirect';
 }) {
+  const { t } = useTranslation();
   const color = direction === 'positive' ? '#16a34a' : '#dc2626';
   const label =
     (direction === 'positive' ? '+' : '−') +
-    (strength === 'direct' ? '直' : '間');
+    (strength === 'direct' ? t('inspector.badge.directChar') : t('inspector.badge.indirectChar'));
   return (
     <span
       className="inline-flex h-4 min-w-[1.5rem] shrink-0 items-center justify-center rounded px-1 text-[10px] font-medium text-white"

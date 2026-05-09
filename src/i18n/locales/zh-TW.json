@@ -1,0 +1,207 @@
+{
+  "common": {
+    "close": "關閉"
+  },
+  "colors": {
+    "gray": "灰",
+    "red": "紅",
+    "orange": "橙",
+    "yellow": "黃",
+    "green": "綠",
+    "blue": "藍",
+    "indigo": "靛",
+    "purple": "紫",
+    "white": "白"
+  },
+  "app": {
+    "quickAddName": "指標 {{number}}",
+    "exampleKpiName": "營收",
+    "loading": "載入中…",
+    "emptyState": {
+      "title": "開始打造你的 KPI 關係畫布",
+      "desc": "先批次新增一批指標，再拖拉兩個節點之間建立關係，最後點擊指標查看它受誰影響、又影響了誰。",
+      "batchAdd": "批次新增",
+      "addExample": "新增範例指標"
+    },
+    "toast": {
+      "relationCreateFailed": "建立失敗（可能已存在相同方向的關係）",
+      "relationCreated": "已建立關係",
+      "importOverwrite": "已匯入並覆蓋畫布",
+      "importMerge": "已合併匯入資料",
+      "keptLocal": "已保留本機畫布",
+      "importedFromUrl": "已從網址匯入並寫入本機"
+    },
+    "historyLabel": {
+      "importOverwrite": "匯入（覆蓋）",
+      "importMerge": "匯入（合併）",
+      "importFromUrl": "從網址匯入"
+    }
+  },
+  "toolbar": {
+    "addSingleTitle": "新增單一指標",
+    "addAriaLabel": "新增",
+    "moreOptionsTitle": "更多新增選項",
+    "batchAdd": "批次新增",
+    "relayout": "重新排版",
+    "undoTitle": "復原 (Cmd/Ctrl+Z)",
+    "undoAriaLabel": "復原",
+    "redoTitle": "重做 (Cmd/Ctrl+Shift+Z)",
+    "redoAriaLabel": "重做",
+    "searchTitle": "搜尋 (Cmd/Ctrl+F)",
+    "searchAriaLabel": "搜尋",
+    "selectModeTitle": "框選節點模式",
+    "panModeTitle": "拖曳畫布模式",
+    "highlightCategory": "突顯分類",
+    "categoryCount": "{{name}}（{{count}}）",
+    "settingsTitle": "設定",
+    "settingsAriaLabel": "設定",
+    "exportTitle": "匯出 JSON",
+    "exportAriaLabel": "匯出",
+    "export": "匯出",
+    "toast": {
+      "noData": "目前沒有資料可匯出",
+      "exported": "已匯出 JSON",
+      "relayout": "已重新排版"
+    }
+  },
+  "inspector": {
+    "noSelection": "尚未選取指標",
+    "noSelectionHint": "點擊畫布上的任一 KPI 節點來編輯內容、Highlight 相關指標或刪除該項。",
+    "shortcuts": "快捷鍵",
+    "shortcutSearch": "搜尋節點與附註",
+    "shortcutUndo": "復原",
+    "shortcutRedo": "重做",
+    "shortcutEsc": "關閉搜尋／取消 Highlight",
+    "multiMode": "多選模式",
+    "selectedCount": "已選取 {{count}} 個指標",
+    "clearSelectionAriaLabel": "清除選取",
+    "batchSetColor": "批次設定分類顏色",
+    "selectedList": "已選取指標",
+    "removeFromSelectionAriaLabel": "移出選取",
+    "kpiDetails": "KPI 詳情",
+    "closeAriaLabel": "關閉",
+    "name": "名稱",
+    "notes": "備註",
+    "primaryCategory": "主分類",
+    "primaryCategoryHint": "名稱可至「設定 → 分類命名」自訂。",
+    "currentPrimary": "目前主分類：",
+    "secondaryCategories": "次分類",
+    "isPrimary": "（主分類）",
+    "influencedBy": "受哪些指標影響（{{count}}）",
+    "influences": "影響哪些指標（{{count}}）",
+    "noRelations": "尚無",
+    "deleteRelationAriaLabel": "刪除關係",
+    "delete": "刪除",
+    "unknown": "(未知)",
+    "badge": {
+      "directChar": "直",
+      "indirectChar": "間"
+    },
+    "toast": {
+      "nameEmpty": "名稱不能為空",
+      "deleted": "已刪除 {{name}}（可用 Cmd+Z 還原）",
+      "primaryCategoryWarning": "此為主分類，請先變更上方主分類色。",
+      "colorsUpdated": "已更新 {{count}} 個指標分類"
+    }
+  },
+  "relationEditor": {
+    "subtitle": "關係詳情",
+    "title": "編輯關係",
+    "closeAriaLabel": "關閉",
+    "deleted": "(已刪除)",
+    "direction": "影響方向",
+    "positive": "正向",
+    "positiveDesc": "增加來源會推升目標",
+    "negative": "負向",
+    "negativeDesc": "增加來源會削弱目標",
+    "strength": "影響強度",
+    "direct": "直接",
+    "directDesc": "影響明確、立即",
+    "indirect": "間接",
+    "indirectDesc": "經由其他因素傳遞",
+    "notes": "備註（選填）",
+    "notesPlaceholder": "例如：延遲一季、需要行銷投入等",
+    "delete": "刪除",
+    "toast": {
+      "deleted": "已刪除關係（可用 Cmd+Z 還原）"
+    }
+  },
+  "batchAdd": {
+    "title": "批次新增 KPI 指標",
+    "nameLabel": "指標名稱（一行一個）",
+    "placeholder": "例如：\n年度營收\n新客戶數\n客戶留存率",
+    "hint": "空白行會自動忽略，與現有指標同名者會跳過。",
+    "colorLabel": "分類顏色（可於新增後再調整）",
+    "cancel": "取消",
+    "addCount": "新增 {{count}} 個指標",
+    "toast": {
+      "noneAdded": "沒有新增任何指標（可能是空白或重複）",
+      "added": "已新增 {{count}} 個指標"
+    }
+  },
+  "importDialog": {
+    "title": "匯入資料",
+    "incomingStats": "匯入檔案包含 <s>{{kpis}}</s> 個指標與 <s>{{relations}}</s> 條關係。",
+    "currentStats": "目前畫布上已有 {{kpis}} 個指標 / {{relations}} 條關係。",
+    "overwriteHint": "覆蓋：清除目前資料，以匯入檔取代",
+    "mergeHint": "合併：以相同 id 進行覆寫，其餘保留",
+    "undoHint": "匯入後仍可以 Cmd/Ctrl+Z 復原",
+    "cancel": "取消",
+    "merge": "合併",
+    "overwrite": "覆蓋",
+    "load": "載入"
+  },
+  "urlImportDialog": {
+    "title": "從網址匯入",
+    "remoteStats": "遠端 JSON 含 <s>{{kpis}}</s> 個指標與 <s>{{relations}}</s> 條關係。",
+    "localWarning": "本機已從 IndexedDB 讀到 {{kpis}} 個指標 / {{relations}} 條關係。若確定載入，將<s>覆寫</s>本機儲存內容（與工具列匯入的「覆蓋」相同）。",
+    "cancelHint": "取消則維持本機資料，開啟原因：網址列帶有",
+    "cancelButton": "取消（保留本機）",
+    "confirmButton": "確定載入"
+  },
+  "settings": {
+    "subtitle": "應用設定",
+    "title": "設定",
+    "closeAriaLabel": "關閉",
+    "data": "資料",
+    "importJson": "匯入 JSON",
+    "importFailed": "匯入失敗",
+    "display": "畫布顯示",
+    "showCategoryLabels": "在節點上顯示所屬分類名稱",
+    "layoutDirection": "自動排版方向",
+    "layoutLR": "水平（左→右）",
+    "layoutTB": "垂直（上→下）",
+    "spacing": "排版間距",
+    "spacingCompact": "緊湊（較省空間）",
+    "spacingComfortable": "舒適（預設）",
+    "spacingWide": "寬鬆（較高可讀性）",
+    "edgeRouting": "線條路徑",
+    "edgeSmoothstep": "Smooth Step（預設）",
+    "edgeStep": "Step（直角）",
+    "edgeBezier": "Bezier（曲線）",
+    "categoryNaming": "分類命名",
+    "language": "語言"
+  },
+  "searchBar": {
+    "placeholder": "搜尋節點與附註",
+    "ariaLabel": "搜尋",
+    "closeTitle": "關閉搜尋 (Esc)",
+    "closeAriaLabel": "關閉搜尋",
+    "empty": "輸入關鍵字搜尋",
+    "noResults": "沒有結果",
+    "nodeCount": "{{count}} 節點",
+    "edgeCount": "{{count}} 線條"
+  },
+  "node": {
+    "categoryPrefix": "分類：",
+    "hasOtherCategories": "另有其他歸屬分類"
+  },
+  "shortcuts": {
+    "confirmDeleteMultiple": "確定要刪除這 {{count}} 個節點嗎？\n相關連線也會一併刪除（可用 Cmd/Ctrl+Z 復原）。",
+    "confirmDeleteWithEdges": "此節點目前有 {{count}} 條關聯連線。\n確定要刪除嗎？"
+  },
+  "persistence": {
+    "unsupportedUrl": "不支援的網址，請使用 http 或 https 的 JSON 連結",
+    "urlImportFailed": "無法從網址讀入 JSON"
+  }
+}

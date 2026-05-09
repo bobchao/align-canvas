@@ -1,0 +1,209 @@
+{
+  "common": {
+    "close": "Close"
+  },
+  "colors": {
+    "gray": "Gray",
+    "red": "Red",
+    "orange": "Orange",
+    "yellow": "Yellow",
+    "green": "Green",
+    "blue": "Blue",
+    "indigo": "Indigo",
+    "purple": "Purple",
+    "white": "White"
+  },
+  "app": {
+    "quickAddName": "Indicator {{number}}",
+    "exampleKpiName": "Revenue",
+    "loading": "Loading…",
+    "emptyState": {
+      "title": "Start building your KPI relationship canvas",
+      "desc": "First batch add indicators, then drag between nodes to create relationships, then click an indicator to see who influences it and who it influences.",
+      "batchAdd": "Batch Add",
+      "addExample": "Add Example Indicator"
+    },
+    "toast": {
+      "relationCreateFailed": "Creation failed (may already exist with the same direction)",
+      "relationCreated": "Relationship created",
+      "importOverwrite": "Imported and overwrote canvas",
+      "importMerge": "Merged import data",
+      "keptLocal": "Kept local canvas",
+      "importedFromUrl": "Imported from URL and saved locally"
+    },
+    "historyLabel": {
+      "importOverwrite": "Import (Overwrite)",
+      "importMerge": "Import (Merge)",
+      "importFromUrl": "Import from URL"
+    }
+  },
+  "toolbar": {
+    "addSingleTitle": "Add Single Indicator",
+    "addAriaLabel": "Add",
+    "moreOptionsTitle": "More Add Options",
+    "batchAdd": "Batch Add",
+    "relayout": "Relayout",
+    "undoTitle": "Undo (Cmd/Ctrl+Z)",
+    "undoAriaLabel": "Undo",
+    "redoTitle": "Redo (Cmd/Ctrl+Shift+Z)",
+    "redoAriaLabel": "Redo",
+    "searchTitle": "Search (Cmd/Ctrl+F)",
+    "searchAriaLabel": "Search",
+    "selectModeTitle": "Box Select Mode",
+    "panModeTitle": "Pan Canvas Mode",
+    "highlightCategory": "Highlight Category",
+    "categoryCount": "{{name}} ({{count}})",
+    "settingsTitle": "Settings",
+    "settingsAriaLabel": "Settings",
+    "exportTitle": "Export JSON",
+    "exportAriaLabel": "Export",
+    "export": "Export",
+    "toast": {
+      "noData": "No data to export",
+      "exported": "Exported JSON",
+      "relayout": "Layout refreshed"
+    }
+  },
+  "inspector": {
+    "noSelection": "No indicator selected",
+    "noSelectionHint": "Click any KPI node on the canvas to edit, highlight related indicators, or delete it.",
+    "shortcuts": "Keyboard Shortcuts",
+    "shortcutSearch": "Search nodes and notes",
+    "shortcutUndo": "Undo",
+    "shortcutRedo": "Redo",
+    "shortcutEsc": "Close search / cancel highlight",
+    "multiMode": "Multi-Selection Mode",
+    "selectedCount": "{{count}} indicators selected",
+    "clearSelectionAriaLabel": "Clear selection",
+    "batchSetColor": "Batch set category color",
+    "selectedList": "Selected Indicators",
+    "removeFromSelectionAriaLabel": "Remove from selection",
+    "kpiDetails": "KPI Details",
+    "closeAriaLabel": "Close",
+    "name": "Name",
+    "notes": "Notes",
+    "primaryCategory": "Primary Category",
+    "primaryCategoryHint": "Names can be customized in Settings → Category Naming.",
+    "currentPrimary": "Current primary category:",
+    "secondaryCategories": "Secondary Categories",
+    "isPrimary": "(Primary)",
+    "influencedBy": "Influenced by ({{count}})",
+    "influences": "Influences ({{count}})",
+    "noRelations": "None",
+    "deleteRelationAriaLabel": "Delete relationship",
+    "delete": "Delete",
+    "unknown": "(Unknown)",
+    "badge": {
+      "directChar": "D",
+      "indirectChar": "I"
+    },
+    "toast": {
+      "nameEmpty": "Name cannot be empty",
+      "deleted": "Deleted {{name}} (Cmd+Z to undo)",
+      "primaryCategoryWarning": "This is the primary category — change the primary category above first.",
+      "colorsUpdated": "Updated {{count}} indicator categories"
+    }
+  },
+  "relationEditor": {
+    "subtitle": "Relationship Details",
+    "title": "Edit Relationship",
+    "closeAriaLabel": "Close",
+    "deleted": "(Deleted)",
+    "direction": "Direction of Effect",
+    "positive": "Positive",
+    "positiveDesc": "Increasing the source promotes the target",
+    "negative": "Negative",
+    "negativeDesc": "Increasing the source weakens the target",
+    "strength": "Strength of Effect",
+    "direct": "Direct",
+    "directDesc": "Clear, immediate effect",
+    "indirect": "Indirect",
+    "indirectDesc": "Transmitted via other factors",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "e.g., one quarter delay, requires marketing investment, etc.",
+    "delete": "Delete",
+    "toast": {
+      "deleted": "Deleted relationship (Cmd+Z to undo)"
+    }
+  },
+  "batchAdd": {
+    "title": "Batch Add KPI Indicators",
+    "nameLabel": "Indicator Names (one per line)",
+    "placeholder": "e.g.:\nAnnual Revenue\nNew Customers\nRetention Rate",
+    "hint": "Empty lines are ignored; duplicates are skipped.",
+    "colorLabel": "Category Color (adjustable after adding)",
+    "cancel": "Cancel",
+    "addCount": "Add {{count}} indicators",
+    "toast": {
+      "noneAdded": "No indicators added (possibly blank or duplicate)",
+      "added": "Added {{count}} indicators"
+    }
+  },
+  "importDialog": {
+    "title": "Import Data",
+    "incomingStats": "Import file contains <s>{{kpis}}</s> indicators and <s>{{relations}}</s> relationships.",
+    "currentStats": "Canvas currently has {{kpis}} indicators / {{relations}} relationships.",
+    "overwriteHint": "Overwrite: clear current data and replace with import",
+    "mergeHint": "Merge: overwrite by matching ID, keep others",
+    "undoHint": "Can still undo after import with Cmd/Ctrl+Z",
+    "cancel": "Cancel",
+    "merge": "Merge",
+    "overwrite": "Overwrite",
+    "load": "Load"
+  },
+  "urlImportDialog": {
+    "title": "Import from URL",
+    "remoteStats": "Remote JSON contains <s>{{kpis}}</s> indicators and <s>{{relations}}</s> relationships.",
+    "localWarning": "Local data has {{kpis}} indicators / {{relations}} relationships from IndexedDB. Loading will <s>overwrite</s> local storage (same as the toolbar's \"Overwrite\" import).",
+    "cancelHint": "Cancel keeps local data. Opened because the URL contains",
+    "cancelButton": "Cancel (keep local)",
+    "confirmButton": "Confirm Load"
+  },
+  "settings": {
+    "subtitle": "Application Settings",
+    "title": "Settings",
+    "closeAriaLabel": "Close",
+    "data": "Data",
+    "importJson": "Import JSON",
+    "importFailed": "Import failed",
+    "display": "Canvas Display",
+    "showCategoryLabels": "Show category names on nodes",
+    "layoutDirection": "Auto Layout Direction",
+    "layoutLR": "Horizontal (Left → Right)",
+    "layoutTB": "Vertical (Top → Bottom)",
+    "spacing": "Layout Spacing",
+    "spacingCompact": "Compact (space saving)",
+    "spacingComfortable": "Comfortable (default)",
+    "spacingWide": "Wide (better readability)",
+    "edgeRouting": "Edge Routing",
+    "edgeSmoothstep": "Smooth Step (default)",
+    "edgeStep": "Step (right angles)",
+    "edgeBezier": "Bezier (curved)",
+    "categoryNaming": "Category Naming",
+    "language": "Language"
+  },
+  "searchBar": {
+    "placeholder": "Search nodes and notes",
+    "ariaLabel": "Search",
+    "closeTitle": "Close search (Esc)",
+    "closeAriaLabel": "Close search",
+    "empty": "Enter keywords to search",
+    "noResults": "No results",
+    "nodeCount_one": "{{count}} node",
+    "nodeCount_other": "{{count}} nodes",
+    "edgeCount_one": "{{count}} edge note",
+    "edgeCount_other": "{{count}} edge notes"
+  },
+  "node": {
+    "categoryPrefix": "Category: ",
+    "hasOtherCategories": "Has other categories"
+  },
+  "shortcuts": {
+    "confirmDeleteMultiple": "Delete these {{count}} nodes?\nRelated edges will also be deleted (Cmd/Ctrl+Z to undo).",
+    "confirmDeleteWithEdges": "This node has {{count}} connected edge(s).\nConfirm delete?"
+  },
+  "persistence": {
+    "unsupportedUrl": "Unsupported URL — use an http or https JSON link",
+    "urlImportFailed": "Unable to read JSON from URL"
+  }
+}

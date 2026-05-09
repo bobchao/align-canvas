@@ -12,12 +12,13 @@ import {
   Undo2,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGraphStore } from '../store/useGraphStore';
 import { buildSnapshot, exportToFile } from '../lib/jsonIO';
 import { toast } from '../ui/Toast';
 import { computeLayout } from '../canvas/layout';
 import { countKpisByCategoryColor } from '../lib/kpiCategory';
-import { KPI_COLOR_LABELS } from '../types';
+import { KPI_COLOR_I18N_KEYS } from '../types';
 
 interface Props {
   onBatchAdd: () => void;
@@ -36,6 +37,7 @@ export function Toolbar({
   settingsOpen,
   onOpenSettings,
 }: Props) {
+  const { t } = useTranslation();
   const addMenuRef = useRef<HTMLDivElement>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
 
@@ -55,11 +57,11 @@ export function Toolbar({
 
   const handleExport = () => {
     if (kpis.length === 0) {
-      toast('info', '目前沒有資料可匯出');
+      toast('info', t('toolbar.toast.noData'));
       return;
     }
     exportToFile(buildSnapshot(kpis, relations, colorNames));
-    toast('success', '已匯出 JSON');
+    toast('success', t('toolbar.toast.exported'));
   };
 
   const colorCounts = countKpisByCategoryColor(kpis);
@@ -80,7 +82,7 @@ export function Toolbar({
       updateKpiPosition(p.id, { x: p.x, y: p.y });
     }
     commitPositions(before);
-    toast('success', '已重新排版');
+    toast('success', t('toolbar.toast.relayout'));
   };
 
   useEffect(() => {
@@ -109,8 +111,8 @@ export function Toolbar({
             type="button"
             className="inline-flex items-center bg-emerald-600 px-2 py-1.5 text-white transition hover:bg-emerald-500"
             onClick={onQuickAdd}
-            title="新增單一指標"
-            aria-label="新增"
+            title={t('toolbar.addSingleTitle')}
+            aria-label={t('toolbar.addAriaLabel')}
           >
             <Plus size={15} />
           </button>
@@ -118,8 +120,8 @@ export function Toolbar({
             type="button"
             className="inline-flex items-center border-l border-emerald-700 bg-emerald-700/80 px-1.5 text-emerald-50 transition hover:bg-emerald-600"
             onClick={() => setAddMenuOpen((v) => !v)}
-            title="更多新增選項"
-            aria-label="更多新增選項"
+            title={t('toolbar.moreOptionsTitle')}
+            aria-label={t('toolbar.moreOptionsTitle')}
           >
             <ChevronDown size={13} />
           </button>
@@ -135,14 +137,14 @@ export function Toolbar({
               }}
             >
               <ListPlus size={14} />
-              批次新增
+              {t('toolbar.batchAdd')}
             </button>
           </div>
         ) : null}
       </div>
-      <button type="button" className="btn whitespace-nowrap" onClick={handleRelayout} title="重新排版" aria-label="重新排版">
+      <button type="button" className="btn whitespace-nowrap" onClick={handleRelayout} title={t('toolbar.relayout')} aria-label={t('toolbar.relayout')}>
         <LayoutDashboard size={14} />
-        <span className="hidden lg:inline whitespace-nowrap">重新排版</span>
+        <span className="hidden lg:inline whitespace-nowrap">{t('toolbar.relayout')}</span>
       </button>
 
       <div className="mx-1 h-5 w-px bg-emerald-800" />
@@ -152,8 +154,8 @@ export function Toolbar({
         className="btn !px-2"
         disabled={!canUndo}
         onClick={undo}
-        title="復原 (Cmd/Ctrl+Z)"
-        aria-label="復原"
+        title={t('toolbar.undoTitle')}
+        aria-label={t('toolbar.undoAriaLabel')}
       >
         <Undo2 size={15} />
       </button>
@@ -162,8 +164,8 @@ export function Toolbar({
         className="btn !px-2"
         disabled={!canRedo}
         onClick={redo}
-        title="重做 (Cmd/Ctrl+Shift+Z)"
-        aria-label="重做"
+        title={t('toolbar.redoTitle')}
+        aria-label={t('toolbar.redoAriaLabel')}
       >
         <Redo2 size={15} />
       </button>
@@ -174,8 +176,8 @@ export function Toolbar({
         type="button"
         className="btn !px-2"
         onClick={openSearch}
-        title="搜尋 (Cmd/Ctrl+F)"
-        aria-label="搜尋"
+        title={t('toolbar.searchTitle')}
+        aria-label={t('toolbar.searchAriaLabel')}
       >
         <Search size={15} />
       </button>
@@ -188,8 +190,8 @@ export function Toolbar({
             'btn-ghost !p-1.5',
             interactionMode === 'select' ? '!bg-emerald-800' : '',
           ].join(' ')}
-          title="框選節點模式"
-          aria-label="框選節點模式"
+          title={t('toolbar.selectModeTitle')}
+          aria-label={t('toolbar.selectModeTitle')}
           onClick={() => onChangeInteractionMode('select')}
         >
           <MousePointer2 size={14} />
@@ -200,8 +202,8 @@ export function Toolbar({
             'btn-ghost !p-1.5',
             interactionMode === 'pan' ? '!bg-emerald-800' : '',
           ].join(' ')}
-          title="拖曳畫布模式"
-          aria-label="拖曳畫布模式"
+          title={t('toolbar.panModeTitle')}
+          aria-label={t('toolbar.panModeTitle')}
           onClick={() => onChangeInteractionMode('pan')}
         >
           <Hand size={14} />
@@ -215,12 +217,15 @@ export function Toolbar({
           value={highlightCategoryColor ?? ''}
           onChange={(e) => setHighlightCategory(e.target.value || null)}
         >
-          <option value="">突顯分類</option>
-          {highlightOptions.map(([color, count]) => (
-            <option key={color} value={color}>
-              {(colorNames[color] || KPI_COLOR_LABELS[color] || color) + `（${count}）`}
-            </option>
-          ))}
+          <option value="">{t('toolbar.highlightCategory')}</option>
+          {highlightOptions.map(([color, count]) => {
+            const name = colorNames[color] || t(KPI_COLOR_I18N_KEYS[color] ?? color);
+            return (
+              <option key={color} value={color}>
+                {t('toolbar.categoryCount', { name, count })}
+              </option>
+            );
+          })}
         </select>
       </label>
 
@@ -229,8 +234,8 @@ export function Toolbar({
         type="button"
         className={['btn !px-2', settingsOpen ? '!bg-emerald-800' : ''].join(' ')}
         onClick={onOpenSettings}
-        title="設定"
-        aria-label="設定"
+        title={t('toolbar.settingsTitle')}
+        aria-label={t('toolbar.settingsAriaLabel')}
       >
         <Settings2 size={15} />
       </button>
@@ -238,11 +243,11 @@ export function Toolbar({
         type="button"
         className="btn !px-2 whitespace-nowrap"
         onClick={handleExport}
-        title="匯出 JSON"
-        aria-label="匯出"
+        title={t('toolbar.exportTitle')}
+        aria-label={t('toolbar.exportAriaLabel')}
       >
         <FileOutput size={15} />
-        <span className="hidden lg:inline">匯出</span>
+        <span className="hidden lg:inline">{t('toolbar.export')}</span>
       </button>
     </header>
   );

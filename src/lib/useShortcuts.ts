@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useGraphStore } from '../store/useGraphStore';
+import i18n from '../i18n';
 
 /**
  * Global keyboard shortcuts:
@@ -93,8 +94,8 @@ export function useShortcuts() {
         if (needsConfirm) {
           const message =
             ids.length > 1
-              ? `確定要刪除這 ${ids.length} 個節點嗎？\\n相關連線也會一併刪除（可用 Cmd/Ctrl+Z 復原）。`
-              : `此節點目前有 ${relatedEdgesCount} 條關聯連線。\\n確定要刪除嗎？`;
+              ? i18n.t('shortcuts.confirmDeleteMultiple', { count: ids.length })
+              : i18n.t('shortcuts.confirmDeleteWithEdges', { count: relatedEdgesCount });
           const confirmed = window.confirm(message);
           if (!confirmed) return;
         }

@@ -1,9 +1,11 @@
 import { Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { computeSearchHits } from '../lib/search';
 import { useGraphStore } from '../store/useGraphStore';
 
 export function SearchBar() {
+  const { t } = useTranslation();
   const searchQuery = useGraphStore((s) => s.searchQuery);
   const setSearchQuery = useGraphStore((s) => s.setSearchQuery);
   const closeSearch = useGraphStore((s) => s.closeSearch);
@@ -27,13 +29,13 @@ export function SearchBar() {
 
   let resultLabel: string;
   if (!trimmed) {
-    resultLabel = '輸入關鍵字搜尋';
+    resultLabel = t('searchBar.empty');
   } else if (totalHits === 0) {
-    resultLabel = '沒有結果';
+    resultLabel = t('searchBar.noResults');
   } else {
     const parts: string[] = [];
-    if (hits.nodeHitCount > 0) parts.push(`${hits.nodeHitCount} 節點`);
-    if (hits.edgeNoteHitCount > 0) parts.push(`${hits.edgeNoteHitCount} 線條`);
+    if (hits.nodeHitCount > 0) parts.push(t('searchBar.nodeCount', { count: hits.nodeHitCount }));
+    if (hits.edgeNoteHitCount > 0) parts.push(t('searchBar.edgeCount', { count: hits.edgeNoteHitCount }));
     resultLabel = parts.join(' · ');
   }
 
@@ -57,8 +59,8 @@ export function SearchBar() {
             closeSearch();
           }
         }}
-        placeholder="搜尋節點與附註"
-        aria-label="搜尋"
+        placeholder={t('searchBar.placeholder')}
+        aria-label={t('searchBar.ariaLabel')}
         className="w-56 bg-transparent text-sm text-emerald-50 placeholder:text-emerald-600 outline-none"
       />
       <span
@@ -74,8 +76,8 @@ export function SearchBar() {
         type="button"
         onClick={closeSearch}
         className="shrink-0 rounded p-1 text-emerald-300 transition hover:bg-emerald-900 hover:text-emerald-50"
-        title="關閉搜尋 (Esc)"
-        aria-label="關閉搜尋"
+        title={t('searchBar.closeTitle')}
+        aria-label={t('searchBar.closeAriaLabel')}
       >
         <X size={14} />
       </button>

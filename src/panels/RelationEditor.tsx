@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGraphStore } from '../store/useGraphStore';
 import type { Relation, RelationDirection, RelationStrength } from '../types';
 import { Trash2, X } from 'lucide-react';
@@ -9,21 +10,22 @@ interface Props {
   onClose: () => void;
 }
 
-const DIRECTION_OPTIONS: Array<{ value: RelationDirection; label: string; desc: string }> = [
-  { value: 'positive', label: '正向', desc: '增加來源會推升目標' },
-  { value: 'negative', label: '負向', desc: '增加來源會削弱目標' },
-];
-
-const STRENGTH_OPTIONS: Array<{ value: RelationStrength; label: string; desc: string }> = [
-  { value: 'direct', label: '直接', desc: '影響明確、立即' },
-  { value: 'indirect', label: '間接', desc: '經由其他因素傳遞' },
-];
-
 export function RelationEditor({ relationId, onClose }: Props) {
+  const { t } = useTranslation();
   const updateRelation = useGraphStore((s) => s.updateRelation);
   const removeRelation = useGraphStore((s) => s.removeRelation);
   const relations = useGraphStore((s) => s.relations);
   const kpis = useGraphStore((s) => s.kpis);
+
+  const directionOptions: Array<{ value: RelationDirection; label: string; desc: string }> = [
+    { value: 'positive', label: t('relationEditor.positive'), desc: t('relationEditor.positiveDesc') },
+    { value: 'negative', label: t('relationEditor.negative'), desc: t('relationEditor.negativeDesc') },
+  ];
+
+  const strengthOptions: Array<{ value: RelationStrength; label: string; desc: string }> = [
+    { value: 'direct', label: t('relationEditor.direct'), desc: t('relationEditor.directDesc') },
+    { value: 'indirect', label: t('relationEditor.indirect'), desc: t('relationEditor.indirectDesc') },
+  ];
 
   const editing: Relation | undefined = useMemo(() => {
     if (!relationId) return undefined;
@@ -68,7 +70,7 @@ export function RelationEditor({ relationId, onClose }: Props) {
 
   const handleDelete = () => {
     removeRelation(editing.id);
-    toast('success', '已刪除關係（可用 Cmd+Z 還原）');
+    toast('success', t('relationEditor.toast.deleted'));
     onClose();
   };
 
@@ -77,15 +79,15 @@ export function RelationEditor({ relationId, onClose }: Props) {
       <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            關係詳情
+            {t('relationEditor.subtitle')}
           </div>
-          <div className="truncate font-semibold text-emerald-50">編輯關係</div>
+          <div className="truncate font-semibold text-emerald-50">{t('relationEditor.title')}</div>
         </div>
         <button
           type="button"
           className="btn-ghost !p-1"
           onClick={onClose}
-          aria-label="關閉"
+          aria-label={t('relationEditor.closeAriaLabel')}
         >
           <X size={16} />
         </button>
@@ -94,18 +96,18 @@ export function RelationEditor({ relationId, onClose }: Props) {
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-800/50">
           <span className="truncate font-medium text-slate-900 dark:text-slate-100">
-            {sourceKpi?.name ?? '(已刪除)'}
+            {sourceKpi?.name ?? t('relationEditor.deleted')}
           </span>
           <span className="text-slate-400">→</span>
           <span className="truncate font-medium text-slate-900 dark:text-slate-100">
-            {targetKpi?.name ?? '(已刪除)'}
+            {targetKpi?.name ?? t('relationEditor.deleted')}
           </span>
         </div>
 
         <div>
-          <div className="label">影響方向</div>
+          <div className="label">{t('relationEditor.direction')}</div>
           <div className="grid grid-cols-2 gap-2">
-            {DIRECTION_OPTIONS.map((opt) => {
+            {directionOptions.map((opt) => {
               const active = direction === opt.value;
               return (
                 <button
@@ -130,9 +132,9 @@ export function RelationEditor({ relationId, onClose }: Props) {
         </div>
 
         <div>
-          <div className="label">影響強度</div>
+          <div className="label">{t('relationEditor.strength')}</div>
           <div className="grid grid-cols-2 gap-2">
-            {STRENGTH_OPTIONS.map((opt) => {
+            {strengthOptions.map((opt) => {
               const active = strength === opt.value;
               return (
                 <button
@@ -157,7 +159,7 @@ export function RelationEditor({ relationId, onClose }: Props) {
         </div>
 
         <div>
-          <label className="label">備註（選填）</label>
+          <label className="label">{t('relationEditor.notes')}</label>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -166,7 +168,7 @@ export function RelationEditor({ relationId, onClose }: Props) {
               if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
             }}
             className="input"
-            placeholder="例如：延遲一季、需要行銷投入等"
+            placeholder={t('relationEditor.notesPlaceholder')}
           />
         </div>
 
@@ -176,7 +178,7 @@ export function RelationEditor({ relationId, onClose }: Props) {
             className="btn text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950"
             onClick={handleDelete}
           >
-            <Trash2 size={14} /> 刪除
+            <Trash2 size={14} /> {t('relationEditor.delete')}
           </button>
         </div>
       </div>
