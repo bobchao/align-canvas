@@ -43,6 +43,8 @@ interface GraphState {
   searchOpen: boolean;
   /** UI-only: current search query string (empty = no search highlight) */
   searchQuery: string;
+  /** UI-only: ELK edge routing bend points keyed by relation id (cleared on node drag) */
+  edgeWaypoints: Record<string, { x: number; y: number }[]>;
   /** whether persisted state has been loaded (to avoid saving an empty state) */
   hydrated: boolean;
   /**
@@ -105,6 +107,8 @@ interface GraphState {
   setSelectedKpi(id: string | null): void;
   setSelectedKpis(ids: string[]): void;
   setActiveRelationId(id: string | null): void;
+
+  setEdgeWaypoints(waypoints: Record<string, { x: number; y: number }[]>): void;
 
   openSearch(): void;
   closeSearch(): void;
@@ -250,6 +254,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
     searchQuery: '',
     hydrated: false,
     urlImportConflict: null,
+    edgeWaypoints: {},
     past: [],
     future: [],
 
@@ -710,6 +715,10 @@ export const useGraphStore = create<GraphState>((set, get) => {
     setActiveRelationId(id) {
       if (get().activeRelationId === id) return;
       set({ activeRelationId: id });
+    },
+
+    setEdgeWaypoints(waypoints) {
+      set({ edgeWaypoints: waypoints });
     },
 
     openSearch() {

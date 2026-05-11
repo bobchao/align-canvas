@@ -57,6 +57,7 @@ export function Toolbar({
   const setActivePerspectiveId = useGraphStore((s) => s.setActivePerspectiveId);
   const colorNames = useGraphStore((s) => s.colorNames);
   const openSearch = useGraphStore((s) => s.openSearch);
+  const setEdgeWaypoints = useGraphStore((s) => s.setEdgeWaypoints);
 
   const handleActivePerspectiveChange = (nextId: string | null) => {
     const prevId = preferences.activePerspectiveId;
@@ -91,15 +92,17 @@ export function Toolbar({
     if (kpis.length === 0) return;
     const before: Record<string, { x: number; y: number } | undefined> = {};
     for (const k of kpis) before[k.id] = k.position ? { ...k.position } : undefined;
-    const positions = computeLayout(kpis, relations, {
+    void computeLayout(kpis, relations, {
       direction: preferences.layoutDirection,
       spacingPreset: preferences.layoutSpacingPreset,
+    }).then(({ positions, edgeWaypoints }) => {
+      for (const p of positions) {
+        updateKpiPosition(p.id, { x: p.x, y: p.y });
+      }
+      commitPositions(before);
+      setEdgeWaypoints(edgeWaypoints);
+      toast('success', t('toolbar.toast.relayout'));
     });
-    for (const p of positions) {
-      updateKpiPosition(p.id, { x: p.x, y: p.y });
-    }
-    commitPositions(before);
-    toast('success', t('toolbar.toast.relayout'));
   };
 
   useEffect(() => {
