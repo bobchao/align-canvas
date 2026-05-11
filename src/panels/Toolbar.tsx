@@ -100,7 +100,13 @@ export function Toolbar({
         updateKpiPosition(p.id, { x: p.x, y: p.y });
       }
       commitPositions(before);
-      setEdgeWaypoints(edgeWaypoints);
+      // Clear waypoints first so edges fall back to default routing while
+      // React Flow re-measures handle positions after the node move.
+      // Then apply the new waypoints in the next frame once handles are settled.
+      setEdgeWaypoints({});
+      requestAnimationFrame(() => {
+        setEdgeWaypoints(edgeWaypoints);
+      });
       toast('success', t('toolbar.toast.relayout'));
     });
   };

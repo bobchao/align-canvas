@@ -91,7 +91,10 @@ export function KpiCanvas({
         const k = kpis.find((x) => x.id === p.id);
         if (k && !k.position) updateKpiPosition(k.id, { x: p.x, y: p.y });
       }
-      setEdgeWaypoints(waypoints);
+      setEdgeWaypoints({});
+      requestAnimationFrame(() => {
+        if (!cancelled) setEdgeWaypoints(waypoints);
+      });
     });
     return () => { cancelled = true; };
   }, [
