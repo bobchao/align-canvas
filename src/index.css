@@ -65,8 +65,17 @@ body {
   to   { stroke-dashoffset: 0; }
 }
 
+@keyframes marching-ants-indirect {
+  from { stroke-dashoffset: 10; }
+  to   { stroke-dashoffset: 0; }
+}
+
 .edge-flow-animated {
-  animation: marching-ants 0.4s linear infinite;
+  animation: marching-ants 0.8s linear infinite;
+}
+
+.edge-flow-animated-indirect {
+  animation: marching-ants-indirect 0.8s linear infinite;
 }
 
 .kpi-handle {
