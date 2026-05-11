@@ -71,6 +71,7 @@ function RelationEdgeImpl(props: EdgeProps) {
         });
 
   const color = direction === 'positive' ? '#16a34a' : '#dc2626';
+  const overlayColor = direction === 'positive' ? '#4ade80' : '#f87171';
   const isDirect = strength === 'direct';
   const strokeDasharray = isDirect ? undefined : '6 4';
   const strokeWidth = editing ? 3.6 : selected || highlighted ? 2.4 : 1.8;
@@ -93,7 +94,7 @@ function RelationEdgeImpl(props: EdgeProps) {
         <path
           d={path}
           fill="none"
-          stroke={color}
+          stroke={overlayColor}
           strokeWidth={2.8}
           strokeDasharray="8 6"
           strokeLinecap="round"
