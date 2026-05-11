@@ -44,6 +44,7 @@ function RelationEdgeImpl(props: EdgeProps) {
   const routingMode = data?.routingMode ?? 'smoothstep';
   const laneOffset = data?.laneOffset ?? 0;
   const highlighted = data?.highlighted ?? false;
+  const dimmed = data?.dimmed ?? false;
   const editing = data?.editing ?? false;
 
   const [path, labelX, labelY] =
@@ -93,6 +94,8 @@ function RelationEdgeImpl(props: EdgeProps) {
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               pointerEvents: 'all',
+              opacity: dimmed ? 0.12 : 1,
+              transition: 'opacity 0.2s ease',
             }}
             className="pointer-events-auto rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
             title={data.note}
