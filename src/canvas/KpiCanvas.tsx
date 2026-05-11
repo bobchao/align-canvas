@@ -245,7 +245,7 @@ export function KpiCanvas({
         sourceHandle,
         targetHandle,
         type: 'relation',
-        zIndex: 6,
+        zIndex: 0,
         data: {
           direction: r.direction,
           strength: r.strength,

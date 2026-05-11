@@ -78,6 +78,18 @@ body {
   animation: marching-ants-indirect 0.8s linear infinite;
 }
 
+.react-flow__edges {
+  z-index: 0;
+}
+
+.react-flow__edgelabel-renderer {
+  z-index: 2;
+}
+
+.react-flow__nodes {
+  z-index: 4;
+}
+
 .kpi-handle {
   cursor: crosshair;
   z-index: 3;
