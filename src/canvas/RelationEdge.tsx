@@ -71,7 +71,8 @@ function RelationEdgeImpl(props: EdgeProps) {
         });
 
   const color = direction === 'positive' ? '#16a34a' : '#dc2626';
-  const strokeDasharray = strength === 'indirect' ? '6 4' : undefined;
+  const isDirect = strength === 'direct';
+  const strokeDasharray = isDirect ? undefined : '6 4';
   const strokeWidth = editing ? 3.6 : selected || highlighted ? 2.4 : 1.8;
 
   return (
@@ -80,6 +81,7 @@ function RelationEdgeImpl(props: EdgeProps) {
         id={id}
         path={path}
         markerEnd={markerEnd}
+        className={highlighted && !isDirect ? 'edge-flow-animated-indirect' : undefined}
         style={{
           stroke: color,
           strokeWidth,
@@ -87,7 +89,7 @@ function RelationEdgeImpl(props: EdgeProps) {
           filter: editing ? 'drop-shadow(0 0 4px rgba(16, 185, 129, 0.65))' : undefined,
         }}
       />
-      {highlighted && (
+      {highlighted && isDirect && (
         <path
           d={path}
           fill="none"
