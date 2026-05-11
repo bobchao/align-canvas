@@ -87,6 +87,19 @@ function RelationEdgeImpl(props: EdgeProps) {
           filter: editing ? 'drop-shadow(0 0 4px rgba(16, 185, 129, 0.65))' : undefined,
         }}
       />
+      {highlighted && (
+        <path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth={2.8}
+          strokeDasharray="8 6"
+          strokeLinecap="round"
+          opacity={0.75}
+          className="edge-flow-animated"
+          pointerEvents="none"
+        />
+      )}
       {data?.note ? (
         <EdgeLabelRenderer>
           <div
