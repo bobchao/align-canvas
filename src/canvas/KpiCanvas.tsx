@@ -65,8 +65,7 @@ export function KpiCanvas({
   const setHighlightSeed = useGraphStore((s) => s.setHighlightSeed);
   const updateKpiPosition = useGraphStore((s) => s.updateKpiPosition);
   const commitPositions = useGraphStore((s) => s.commitPositions);
-  const edgeWaypoints = useGraphStore((s) => s.edgeWaypoints);
-  const setEdgeWaypoints = useGraphStore((s) => s.setEdgeWaypoints);
+
 
   const rf = useReactFlow();
 
@@ -85,16 +84,12 @@ export function KpiCanvas({
     void computeLayout(kpis, relations, {
       direction: preferences.layoutDirection,
       spacingPreset: preferences.layoutSpacingPreset,
-    }).then(({ positions, edgeWaypoints: waypoints }) => {
+    }).then(({ positions }) => {
       if (cancelled) return;
       for (const p of positions) {
         const k = kpis.find((x) => x.id === p.id);
         if (k && !k.position) updateKpiPosition(k.id, { x: p.x, y: p.y });
       }
-      setEdgeWaypoints({});
-      requestAnimationFrame(() => {
-        if (!cancelled) setEdgeWaypoints(waypoints);
-      });
     });
     return () => { cancelled = true; };
   }, [
@@ -103,7 +98,6 @@ export function KpiCanvas({
     preferences.layoutDirection,
     preferences.layoutSpacingPreset,
     updateKpiPosition,
-    setEdgeWaypoints,
   ]);
 
   // Auto fit only for the initial graph load (first hydrate),
@@ -216,7 +210,6 @@ export function KpiCanvas({
     const positionMap = new Map(
       kpis.map((k) => [k.id, k.position ?? { x: 0, y: 0 }] as const),
     );
-    const waypointsMap = edgeWaypoints;
     const laneCounter = new Map<string, number>();
 
     const pickHandles = (sourceId: string, targetId: string) => {
@@ -261,7 +254,7 @@ export function KpiCanvas({
           note: r.note,
           routingMode: preferences.edgeRoutingMode,
           laneOffset,
-          waypoints: waypointsMap[r.id],
+          waypoints: undefined,
           highlighted,
           dimmed,
           editing: activeRelationId === r.id,
@@ -278,7 +271,7 @@ export function KpiCanvas({
         },
       };
     });
-  }, [relations, highlight, kpis, activeRelationId, preferences.edgeRoutingMode, edgeWaypoints]);
+  }, [relations, highlight, kpis, activeRelationId, preferences.edgeRoutingMode]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -298,7 +291,6 @@ export function KpiCanvas({
             dragStartRef.current[change.id] = k?.position
               ? { ...k.position }
               : undefined;
-            setEdgeWaypoints({});
           }
         }
       }
@@ -320,7 +312,7 @@ export function KpiCanvas({
         setSelectedKpis(Array.from(nextSelected));
       }
     },
-    [nodes, kpis, selectedKpiIds, updateKpiPosition, commitPositions, setSelectedKpis, setEdgeWaypoints],
+    [nodes, kpis, selectedKpiIds, updateKpiPosition, commitPositions, setSelectedKpis],
   );
 
   const handleConnectStart: OnConnectStart = useCallback((_, params) => {

@@ -57,7 +57,6 @@ export function Toolbar({
   const setActivePerspectiveId = useGraphStore((s) => s.setActivePerspectiveId);
   const colorNames = useGraphStore((s) => s.colorNames);
   const openSearch = useGraphStore((s) => s.openSearch);
-  const setEdgeWaypoints = useGraphStore((s) => s.setEdgeWaypoints);
 
   const handleActivePerspectiveChange = (nextId: string | null) => {
     const prevId = preferences.activePerspectiveId;
@@ -95,18 +94,11 @@ export function Toolbar({
     void computeLayout(kpis, relations, {
       direction: preferences.layoutDirection,
       spacingPreset: preferences.layoutSpacingPreset,
-    }).then(({ positions, edgeWaypoints }) => {
+    }).then(({ positions }) => {
       for (const p of positions) {
         updateKpiPosition(p.id, { x: p.x, y: p.y });
       }
       commitPositions(before);
-      // Clear waypoints first so edges fall back to default routing while
-      // React Flow re-measures handle positions after the node move.
-      // Then apply the new waypoints in the next frame once handles are settled.
-      setEdgeWaypoints({});
-      requestAnimationFrame(() => {
-        setEdgeWaypoints(edgeWaypoints);
-      });
       toast('success', t('toolbar.toast.relayout'));
     });
   };
